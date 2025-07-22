@@ -86,7 +86,9 @@
         .search-container input[type="text"],
         .sort-container select,
         .filter-control input[type="number"],
-        .filter-control select {
+        .filter-control select,
+        .detail-quantity-controls select, /* Estilo para nuevo selector de cantidad */
+        .detail-quantity-controls input[type="number"] { /* Estilo para nuevo input de cantidad */
             padding: 10px 15px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -100,7 +102,9 @@
         .search-container input:focus,
         .sort-container select:focus,
         .filter-control input:focus,
-        .filter-control select:focus {
+        .filter-control select:focus,
+        .detail-quantity-controls select:focus,
+        .detail-quantity-controls input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15); /* Sombra suave al enfocar */
@@ -112,6 +116,27 @@
             font-size: 0.9em;
             white-space: nowrap; /* Evita que el texto de la etiqueta se rompa */
         }
+        
+        /* Controles de cantidad en el modal de detalle */
+        .detail-quantity-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-top: -15px;
+            margin-bottom: 15px;
+        }
+        .detail-quantity-controls .control-label {
+            margin-right: 5px;
+        }
+        .detail-quantity-controls select {
+            min-width: 120px;
+        }
+        .detail-quantity-controls input[type="number"] {
+            min-width: 80px;
+            width: 80px;
+        }
+
 
         /* --- Sección de Filtros Avanzados --- */
         .advanced-filter-container {
@@ -760,12 +785,12 @@
             .btn-secondary { background-color: #3a3a3a; color: var(--text-color); border: 1px solid var(--border-color); }
             .btn-secondary:hover { background-color: #4a4a4a; }
             .form-group label, .filter-control label { color: var(--light-text-color); }
-            .form-group input, .form-group select, .filter-control input, .filter-control select {
+            .form-group input, .form-group select, .filter-control input, .filter-control select, .detail-quantity-controls select, .detail-quantity-controls input {
                 background-color: #3a3a3a;
                 color: var(--text-color);
                 border-color: #4a4a4a;
             }
-            .form-group input:focus, .form-group select:focus, .filter-control input:focus, .filter-control select:focus {
+            .form-group input:focus, .form-group select:focus, .filter-control input:focus, .filter-control select:focus, .detail-quantity-controls select:focus, .detail-quantity-controls input:focus {
                 border-color: var(--primary-color);
                 box-shadow: 0 0 0 3px rgba(109, 175, 251, 0.15);
             }
@@ -833,6 +858,9 @@
             }
             .advanced-filter-grid {
                 grid-template-columns: 1fr; /* Apila los grupos de filtros verticalmente */
+            }
+            .detail-quantity-controls {
+                flex-wrap: wrap; /* Permite que los controles se envuelvan */
             }
         }
         /* Media query para pantallas medianas, permite 2 tarjetas con un ancho mínimo decente */
@@ -972,19 +1000,22 @@
         <div class="modal-content">
             <button class="modal-close-btn" onclick="closeModal('foodDetailModal')">&times;</button>
             <h2 id="detailFoodName"></h2>
-            <p style="text-align: right; color: var(--light-text-color); margin-top: -15px;">Valores por 
+            
+            <div class="detail-quantity-controls">
+                <span class="control-label">Valores por:</span>
                 <select id="detailQuantitySelector" onchange="updateDetailNutrients()">
-                    <option value="100">100g/ml</option>
-                    <option value="200">200g/ml</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
                     <option value="user">Personalizado</option>
                 </select>
-                <span id="detailUnitLabel"></span>
-                <input type="number" id="detailCustomQuantity" step="1" min="1" value="100" style="width: 80px; margin-left: 10px; display: none;" oninput="updateDetailNutrients()">
-            </p>
+                <input type="number" id="detailCustomQuantity" step="1" min="1" value="100" style="display: none;" oninput="updateDetailNutrients()">
+                <span class="control-label" id="detailUnitLabel">g</span>
+            </div>
 
             <p class="section-title">Información General:</p>
             <p><strong>Categoría:</strong> <span id="detailCategory"></span></p>
             <p><strong>Características:</strong> <span id="detailCharacteristics"></span></p>
+            <p><strong>Precio:</strong> <span id="detailPrice"></span></p>
 
             <p class="section-title">Información Nutricional:</p>
             <table class="nutrient-table">
@@ -1013,7 +1044,7 @@
         <div class="modal-content">
             <button class="modal-close-btn" onclick="closeModal('foodEditModal')">&times;</button>
             <h2>Editar Alimento: <span id="editFoodNameHeader"></span></h2>
-            <p style="text-align: right; color: var(--light-text-color); margin-top: -15px;">Valores por <span id="editUnitLabel"></span></p>
+            <p style="text-align: right; color: var(--light-text-color); margin-top: -15px;">Valores por 100<span id="editUnitLabel">g</span></p>
 
             <form id="editFoodForm">
                 <input type="hidden" id="editFoodIndex">
@@ -1139,95 +1170,88 @@
 
         // L_E_O: Categorías de alimentos para filtrado y clasificación.
         const foodCategories = [
-            "Frutas",
-            "Verduras y Hortalizas",
-            "Carnes y Proteínas",
-            "Lácteos y Alternativas",
-            "Pan, Cereales y Legumbres",
-            "Frutos Secos y Semillas",
-            "Grasas Saludables",
-            "Bebidas",
-            "Otros"
+            "Frutas", "Verduras y Hortalizas", "Carnes y Proteínas", "Lácteos y Alternativas",
+            "Pan, Cereales y Legumbres", "Frutos Secos y Semillas", "Grasas Saludables",
+            "Bebidas", "Hierbas y Condimentos", "Otros"
         ];
 
         // L_E_O: Características especiales para filtrado y etiquetado.
         const specialCharacteristics = [
             "Apto Vegano", "Apto Celíaco", "Bajo en Sal", "Sin Lactosa", "Alto en Fibra",
             "Bajo en Grasa", "Rico en Omega-3", "Fuente de Calcio", "Probiótico",
-            "Sin Glúten", "Alto en Proteínas", "Alto en Vitamina C", "Alto en Hierro",
+            "Sin Gluten", "Alto en Proteínas", "Alto en Vitamina C", "Alto en Hierro",
             "Rico en Vitamina E", "Alto en Vitamina K", "Bajo en Azúcares", "Sin Calorías",
             "Fuente de Vitamina D"
         ];
 
         // L_E_O: Lista predefinida de micronutrientes disponibles para añadir.
-        // Incluye Vitamina K1 y K2 separadas.
         const availableMicronutrients = [
             { name: "Vitamina A", unit: "mcg", type: "Vitamina" }, { name: "Vitamina B1", unit: "mg", type: "Vitamina" },
             { name: "Vitamina B2", unit: "mg", type: "Vitamina" }, { name: "Vitamina B3", unit: "mg", type: "Vitamina" },
             { name: "Vitamina B5", unit: "mg", type: "Vitamina" }, { name: "Vitamina B6", unit: "mg", type: "Vitamina" },
             { name: "Vitamina B9 (Folato)", unit: "mcg", type: "Vitamina" }, { name: "Vitamina B12", unit: "mcg", type: "Vitamina" },
             { name: "Vitamina C", unit: "mg", type: "Vitamina" }, { name: "Vitamina D", unit: "mcg", type: "Vitamina" },
-            { name: "Vitamina E", unit: "mg", type: "Vitamina" },
-            { name: "Vitamina K1", unit: "mcg", type: "Vitamina" },
-            { name: "Vitamina K2", unit: "mcg", type: "Vitamina" },
-            { name: "Biotina", unit: "mcg", type: "Vitamina" }, { name: "Colina", unit: "mg", type: "Vitamina" },
-
-            { name: "Calcio", unit: "mg", type: "Mineral" }, { name: "Cloro", unit: "mg", type: "Mineral" },
-            { name: "Cobre", unit: "mg", type: "Mineral" }, { name: "Cromo", unit: "mcg", type: "Mineral" },
-            { name: "Fósforo", unit: "mg", type: "Mineral" }, { name: "Hierro", unit: "mg", type: "Mineral" },
-            { name: "Magnesio", unit: "mg", type: "Mineral" }, { name: "Manganeso", unit: "mg", type: "Mineral" },
-            { name: "Molibdeno", unit: "mcg", type: "Mineral" }, { name: "Potasio", unit: "mg", type: "Mineral" },
-            { name: "Selenio", unit: "mcg", type: "Mineral" }, { name: "Sodio", unit: "g", type: "Mineral" },
-            { name: "Yodo", unit: "mcg", type: "Mineral" }, { name: "Zinc", unit: "mg", type: "Mineral" },
-
-            { name: "Omega-3", unit: "g", type: "Otros" }, { name: "Omega-6", unit: "g", type: "Otros" },
-            { name: "Omega-9 (Ácido Oleico)", unit: "g", type: "Otros" }
+            { name: "Vitamina E", unit: "mg", type: "Vitamina" }, { name: "Vitamina K1", unit: "mcg", type: "Vitamina" },
+            { name: "Vitamina K2", unit: "mcg", type: "Vitamina" }, { name: "Biotina", unit: "mcg", type: "Vitamina" },
+            { name: "Colina", unit: "mg", type: "Vitamina" }, { name: "Calcio", unit: "mg", type: "Mineral" },
+            { name: "Cloro", unit: "mg", type: "Mineral" }, { name: "Cobre", unit: "mg", type: "Mineral" },
+            { name: "Cromo", unit: "mcg", type: "Mineral" }, { name: "Fósforo", unit: "mg", type: "Mineral" },
+            { name: "Hierro", unit: "mg", type: "Mineral" }, { name: "Magnesio", unit: "mg", type: "Mineral" },
+            { name: "Manganeso", unit: "mg", type: "Mineral" }, { name: "Molibdeno", unit: "mcg", type: "Mineral" },
+            { name: "Potasio", unit: "mg", "type": "Mineral" }, { name: "Selenio", unit: "mcg", type: "Mineral" },
+            { name: "Sodio", unit: "g", type: "Mineral" }, { name: "Yodo", unit: "mcg", type: "Mineral" },
+            { name: "Zinc", unit: "mg", type: "Mineral" }, { name: "Omega-3", unit: "g", type: "Otros" },
+            { name: "Omega-6", unit: "g", type: "Otros" }, { name: "Omega-9 (Ácido Oleico)", unit: "g", type: "Otros" }
         ];
 
         // L_E_O: Valores Diarios Recomendados (VDR) - EJEMPLO.
-        // Estos valores son cruciales para el cálculo de los porcentajes de VDR.
-        // Se ha añadido Vitamina K1 y K2.
         const dailyRecommendedValues = {
             "calories": 2000, "fat": 70, "saturatedFat": 20, "carbs": 275, "sugars": 50, "protein": 50, "fiber": 30, "salt": 6,
             "Vitamina A": { value: 800, unit: "mcg" }, "Vitamina C": { value: 80, unit: "mg" }, "Vitamina D": { value: 5, unit: "mcg" },
             "Vitamina E": { value: 12, unit: "mg" }, "Vitamina K1": { value: 75, unit: "mcg" }, "Vitamina K2": { value: 45, unit: "mcg" },
             "Vitamina B1": { value: 1.1, unit: "mg" }, "Vitamina B2": { value: 1.4, unit: "mg" }, "Vitamina B3": { value: 16, unit: "mg" },
-            "Vitamina B5": { value: 6, unit: "mg" }, "Vitamina B6": { value: 1.4, unit: "mg" }, "Vitamina B9 (Folato)": { value: 200, unit: "mcg" }, "Vitamina B12": { value: 2.5, unit: "mcg" },
-            "Biotina": { value: 50, unit: "mcg" }, "Colina": { value: 550, unit: "mg" },
+            "Vitamina B5": { value: 6, unit: "mg" }, "Vitamina B6": { value: 1.4, unit: "mg" }, "Vitamina B9 (Folato)": { value: 200, unit: "mcg" },
+            "Vitamina B12": { value: 2.5, unit: "mcg" }, "Biotina": { value: 50, unit: "mcg" }, "Colina": { value: 550, unit: "mg" },
             "Calcio": { value: 800, unit: "mg" }, "Cloro": { value: 800, unit: "mg" }, "Cobre": { value: 1, unit: "mg" },
             "Cromo": { value: 40, unit: "mcg" }, "Fósforo": { value: 700, unit: "mg" }, "Hierro": { value: 14, unit: "mg" },
             "Magnesio": { value: 375, unit: "mg" }, "Manganeso": { value: 2, unit: "mg" }, "Molibdeno": { value: 50, unit: "mcg" },
             "Potasio": { value: 2000, unit: "mg" }, "Selenio": { value: 55, unit: "mcg" }, "Sodio": { value: 2.4, unit: "g" },
-            "Yodo": { value: 150, unit: "mcg" }, "Zinc": { value: 10, unit: "mg" },
-            "Omega-3": { value: 250, unit: "mg" }, "Omega-6": { value: 10, unit: "g" }, "Omega-9 (Ácido Oleico)": { value: 20, unit: "g" }
+            "Yodo": { value: 150, unit: "mcg" }, "Zinc": { value: 10, unit: "mg" }, "Omega-3": { value: 250, unit: "mg" },
+            "Omega-6": { value: 10, unit: "g" }, "Omega-9 (Ácido Oleico)": { value: 20, unit: "g" }
         };
 
         // Referencias a elementos DOM para una manipulación más eficiente.
         const foodListDiv = document.getElementById('foodList');
-        const foodDetailModal = document.getElementById('foodDetailModal');
-        const foodEditModal = document.getElementById('foodEditModal');
-        const confirmationModal = document.getElementById('confirmationModal');
-        const detailNutrientTableBody = document.getElementById('detailNutrientTableBody');
-        const editMicronutrientTableBody = document.getElementById('editMicronutrientTable').getElementsByTagName('tbody')[0];
-        const editUnitBaseSelect = document.getElementById('editUnitBase');
-        const priceUnitLabel = document.getElementById('priceUnitLabel');
-        const editPriceInput = document.getElementById('editPrice');
         const searchInput = document.getElementById('searchFood');
         const sortCriteriaSelect = document.getElementById('sortCriteria');
         const sortDirectionSelect = document.getElementById('sortDirection');
         const micronutrientSortContainer = document.getElementById('micronutrientSortContainer');
         const sortMicronutrientSelect = document.getElementById('sortMicronutrient');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        const confirmActionButton = document.getElementById('confirmActionButton');
+        
+        // Elementos del modal de detalle
+        const foodDetailModal = document.getElementById('foodDetailModal');
+        const detailNutrientTableBody = document.getElementById('detailNutrientTableBody');
+        const detailQuantitySelector = document.getElementById('detailQuantitySelector');
+        const detailCustomQuantityInput = document.getElementById('detailCustomQuantity');
+        const detailUnitLabel = document.getElementById('detailUnitLabel');
+
+        // Elementos del modal de edición
+        const foodEditModal = document.getElementById('foodEditModal');
+        const editMicronutrientTableBody = document.getElementById('editMicronutrientTable').getElementsByTagName('tbody')[0];
+        const editUnitBaseSelect = document.getElementById('editUnitBase');
+        const priceUnitLabel = document.getElementById('priceUnitLabel');
+        const editPriceInput = document.getElementById('editPrice');
         const editCaloriesInput = document.getElementById('editCalories');
         const editProteinInput = document.getElementById('editProtein');
         const editCarbsInput = document.getElementById('editCarbs');
         const editFatInput = document.getElementById('editFat');
-        const editFiberInput = document.getElementById('editFiber');
         const editSugarsInput = document.getElementById('editSugars');
         const editSaturatedFatInput = document.getElementById('editSaturatedFat');
-        const editSaltInput = document.getElementById('editSalt');
         const deleteFoodBtn = document.getElementById('deleteFoodBtn');
-        const confirmationMessage = document.getElementById('confirmationMessage');
-        const confirmActionButton = document.getElementById('confirmActionButton');
 
         // Elementos para filtros avanzados
         const advancedFilterContainer = document.getElementById('advancedFilterContainer');
@@ -1241,9 +1265,6 @@
         const filterSaltMax = document.getElementById('filterSaltMax');
         const filterPriceMax = document.getElementById('filterPriceMax');
         const filterCategorySelect = document.getElementById('filterCategory');
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        const detailQuantitySelector = document.getElementById('detailQuantitySelector');
-        const detailCustomQuantityInput = document.getElementById('detailCustomQuantity');
         const filterSpecialCharacteristicsDiv = document.getElementById('filterSpecialCharacteristics');
 
 
@@ -1265,6 +1286,31 @@
         }
 
         /**
+         * Calcula las calorías de un alimento basándose en sus macronutrientes.
+         * Utiliza las proporciones estándar: 4 Kcal/g para proteínas y carbohidratos, 9 Kcal/g para grasas.
+         * @param {object} food - El objeto alimento con propiedades protein, carbs y fat.
+         * @returns {number} - Las calorías calculadas, redondeadas a un decimal.
+         */
+        function getCalculatedCalories(food) {
+            const protein = parseFloat(food.protein) || 0;
+            const carbs = parseFloat(food.carbs) || 0;
+            const fat = parseFloat(food.fat) || 0;
+            return parseFloat(((protein * 4) + (carbs * 4) + (fat * 9)).toFixed(1));
+        }
+
+        /**
+         * Calcula y muestra las calorías en el campo de calorías del modal de edición.
+         */
+        function calculateAndDisplayCalories() {
+            const food = {
+                protein: document.getElementById('editProtein').value,
+                carbs: document.getElementById('editCarbs').value,
+                fat: document.getElementById('editFat').value
+            };
+            editCaloriesInput.value = getCalculatedCalories(food);
+        }
+
+        /**
          * Calcula el porcentaje del Valor Diario Recomendado (VDR) para un nutriente dado.
          * Realiza conversiones de unidades básicas (mcg/mg/g) si es necesario.
          * @param {number} nutrientValue - La cantidad del nutriente en el alimento.
@@ -1276,59 +1322,25 @@
             let vdrTarget = dailyRecommendedValues[nutrientName];
             if (!vdrTarget) return '-'; // No hay VDR definido para este nutriente.
 
-            // Obtiene el valor y la unidad del VDR objetivo.
             let vdrValue = typeof vdrTarget === 'object' ? vdrTarget.value : vdrTarget;
-            let vdrUnit = typeof vdrTarget === 'object' ? vdrTarget.unit : unit; // Asume la misma unidad si no se especifica.
+            let vdrUnit = typeof vdrTarget === 'object' ? vdrTarget.unit : unit; 
 
-            // L_E_O: Conversiones de unidades básicas para cálculo de VDR
-            // Esto asegura que el valor del nutriente y el VDR estén en la misma unidad antes de calcular el porcentaje.
-            if (unit === "mcg" && vdrUnit === "mg") {
-                vdrValue /= 1000;
-            } else if (unit === "mg" && vdrUnit === "mcg") {
-                vdrValue *= 1000;
-            } else if (unit === "mg" && vdrUnit === "g") {
-                vdrValue /= 1000;
-            } else if (unit === "g" && vdrUnit === "mg") {
-                vdrValue *= 1000;
-            } else if (unit === "g" && vdrUnit === "mcg") {
-                vdrValue /= 1000000;
-            } else if (unit === "mcg" && vdrUnit === "g") {
-                vdrValue *= 1000000;
-            }
+            let nutrientValueInVdrUnit = nutrientValue;
+            if (unit === 'mcg' && vdrUnit === 'mg') nutrientValueInVdrUnit /= 1000;
+            else if (unit === 'mg' && vdrUnit === 'mcg') nutrientValueInVdrUnit *= 1000;
+            else if (unit === 'mg' && vdrUnit === 'g') nutrientValueInVdrUnit /= 1000;
+            else if (unit === 'g' && vdrUnit === 'mg') nutrientValueInVdrUnit *= 1000;
+            else if (unit === 'g' && vdrUnit === 'mcg') nutrientValueInVdrUnit *= 1000000;
+            else if (unit === 'mcg' && vdrUnit === 'g') nutrientValueInVdrUnit /= 1000000;
 
             if (vdrValue && vdrValue > 0) {
-                // Calcula y redondea el porcentaje de VDR.
-                return ((nutrientValue / vdrValue) * 100).toFixed(0);
+                return ((nutrientValueInVdrUnit / vdrValue) * 100).toFixed(0);
             }
             return '-'; // Si el VDR es cero o no válido.
         }
 
         /**
-         * Calcula las calorías de un alimento basándose en sus macronutrientes.
-         * Utiliza las proporciones estándar: 4 Kcal/g para proteínas y carbohidratos, 9 Kcal/g para grasas.
-         * @returns {number} - Las calorías calculadas, redondeadas a un decimal.
-         */
-        function calculateCalories() {
-            const protein = parseFloat(editProteinInput.value) || 0;
-            const carbs = parseFloat(editCarbsInput.value) || 0;
-            const fat = parseFloat(editFatInput.value) || 0;
-            // La fibra se considera 0 kcal/g en este cálculo simple.
-            const calculatedCalories = (protein * 4) + (carbs * 4) + (fat * 9);
-            return calculatedCalories.toFixed(1); // Mantiene un decimal.
-        }
-
-        /**
-         * Calcula y muestra las calorías en el campo de calorías del modal de edición.
-         */
-        function calculateAndDisplayCalories() {
-            editCaloriesInput.value = calculateCalories();
-        }
-
-        /**
          * Valida que los valores de los macronutrientes sean coherentes y positivos.
-         * - Los azúcares no pueden ser mayores que los carbohidratos totales.
-         * - Las grasas saturadas no pueden ser mayores que las grasas totales.
-         * - Todos los campos numéricos deben ser números no negativos.
          * Muestra mensajes de validación al usuario.
          * @returns {boolean} - True si todos los macronutrientes son válidos, false en caso contrario.
          */
@@ -1337,124 +1349,66 @@
             const sugars = parseFloat(editSugarsInput.value) || 0;
             const fat = parseFloat(editFatInput.value) || 0;
             const saturatedFat = parseFloat(editSaturatedFatInput.value) || 0;
-            const salt = parseFloat(editSaltInput.value) || 0;
 
             let isValid = true;
-
-            // Validación: Azúcares vs. Carbohidratos
-            if (sugars > carbs) {
-                editSugarsInput.classList.add('invalid');
-                editSugarsInput.nextElementSibling.textContent = 'Los azúcares no pueden ser mayores que los carbohidratos.';
-                editSugarsInput.nextElementSibling.style.display = 'block';
-                isValid = false;
-            } else {
-                editSugarsInput.classList.remove('invalid');
-                editSugarsInput.nextElementSibling.style.display = 'none';
-            }
-
-            // Validación: Grasas Saturadas vs. Grasas Totales
-            if (saturatedFat > fat) {
-                editSaturatedFatInput.classList.add('invalid');
-                editSaturatedFatInput.nextElementSibling.textContent = 'Las grasas saturadas no pueden ser mayores que las grasas totales.';
-                editSaturatedFatInput.nextElementSibling.style.display = 'block';
-                isValid = false;
-            } else {
-                editSaturatedFatInput.classList.remove('invalid');
-                editSaturatedFatInput.nextElementSibling.style.display = 'none';
-            }
-
-            // Validación: Sal (asegura que no sea negativa, aunque no tiene límite superior estricto aquí)
-            if (salt < 0) {
-                 editSaltInput.classList.add('invalid');
-                editSaltInput.nextElementSibling.textContent = 'La sal no puede ser negativa.';
-                editSaltInput.nextElementSibling.style.display = 'block';
-                isValid = false;
-            } else {
-                 editSaltInput.classList.remove('invalid');
-                editSaltInput.nextElementSibling.style.display = 'none';
-            }
-
-            // Validación general para campos numéricos: deben ser no negativos.
-            const numericFields = [
-                editProteinInput, editCarbsInput, editFatInput, editFiberInput, editPriceInput
-            ];
-            numericFields.forEach(input => {
-                const val = parseFloat(input.value);
-                if (isNaN(val) || val < 0) {
-                    input.classList.add('invalid');
-                    input.nextElementSibling.textContent = 'Debe ser un número positivo.';
-                    input.nextElementSibling.style.display = 'block';
+            
+            const validateSubField = (subInput, mainValue, message) => {
+                const subValue = parseFloat(subInput.value) || 0;
+                if (subValue > mainValue) {
+                    subInput.classList.add('invalid');
+                    subInput.nextElementSibling.textContent = message;
+                    subInput.nextElementSibling.style.display = 'block';
                     isValid = false;
                 } else {
-                    input.classList.remove('invalid');
-                    input.nextElementSibling.style.display = 'none';
+                    subInput.classList.remove('invalid');
+                    subInput.nextElementSibling.style.display = 'none';
                 }
-            });
+            };
+            
+            validateSubField(editSugarsInput, carbs, 'Los azúcares no pueden ser mayores que los carbohidratos.');
+            validateSubField(editSaturatedFatInput, fat, 'Las grasas saturadas no pueden ser mayores que las grasas totales.');
 
             return isValid;
         }
 
         /**
          * Renderiza las tarjetas de alimentos en la interfaz principal.
-         * Aplica paginación: solo muestra un número limitado de alimentos y un botón "Cargar Más" si hay más.
          * @param {Array<Object>} filteredAndSortedData - Los datos de alimentos ya filtrados y ordenados.
          */
         function renderFoodCards(filteredAndSortedData) {
             foodListDiv.innerHTML = ''; // Limpia las tarjetas existentes.
-            // Limita la cantidad de alimentos a mostrar según `displayedFoodCount`.
             const foodsToDisplay = filteredAndSortedData.slice(0, displayedFoodCount);
 
             foodsToDisplay.forEach((food) => {
-                // Determina la unidad de visualización (g o ml) para 100 unidades.
-                const displayUnit = food.unitBase === 'g' ? 'g' : 'ml';
-                // Determina la unidad de precio (kg o L).
-                const priceUnitDisplay = food.unitBase === 'g' ? 'kg' : 'L';
+                const displayUnit = food.unitBase;
+                const priceUnitDisplay = displayUnit === 'g' ? 'kg' : 'L';
 
-                // Prepara los micronutrientes para mostrar, incluyendo su VDR.
-                const allMicrosWithVDR = [];
-                for (const [name, data] of Object.entries(food.micronutrients)) {
+                const allMicrosWithVDR = Object.entries(food.micronutrients).map(([name, data]) => {
                     const vdr = calculateVDR(data.value, name, data.unit);
-                    if (vdr !== '-') {
-                        allMicrosWithVDR.push({ name, value: data.value, unit: data.unit, type: data.type, vdr: parseFloat(vdr) });
-                    }
-                }
+                    return { name, ...data, vdr: vdr !== '-' ? parseFloat(vdr) : -1 };
+                });
 
-                // Selecciona los 3 micronutrientes principales de cada tipo (Vitamina, Mineral, Otros) por VDR descendente.
-                const vitamins = allMicrosWithVDR.filter(m => m.type === 'Vitamina').sort((a, b) => b.vdr - a.vdr).slice(0, 3);
-                const minerals = allMicrosWithVDR.filter(m => m.type === 'Mineral').sort((a, b) => b.vdr - a.vdr).slice(0, 3);
-                const others = allMicrosWithVDR.filter(m => m.type === 'Otros').sort((a, b) => b.vdr - a.vdr).slice(0, 3);
+                const topMicrosHtml = (type, title) => {
+                    const micros = allMicrosWithVDR
+                        .filter(m => m.type === type && m.vdr > 0)
+                        .sort((a, b) => b.vdr - a.vdr)
+                        .slice(0, 3);
+                    
+                    if (micros.length === 0) return '';
+                    
+                    let html = `<strong>${title}:</strong><ul>`;
+                    micros.forEach(micro => {
+                        html += `<li>${micro.name}: ${micro.value}${micro.unit} (${micro.vdr}%)</li>`;
+                    });
+                    html += '</ul>';
+                    return html;
+                };
 
-                let micronutrientsHtml = '';
-                // Construye el HTML para las vitaminas.
-                if (vitamins.length > 0) {
-                    micronutrientsHtml += '<strong>Vitaminas:</strong><ul>';
-                    vitamins.forEach(micro => {
-                        micronutrientsHtml += `<li>${micro.name}: ${micro.value}${micro.unit} (${micro.vdr}%)</li>`;
-                    });
-                    micronutrientsHtml += '</ul>';
-                }
-                // Construye el HTML para los minerales.
-                if (minerals.length > 0) {
-                    micronutrientsHtml += '<strong>Minerales:</strong><ul>';
-                    minerals.forEach(micro => {
-                        micronutrientsHtml += `<li>${micro.name}: ${micro.value}${micro.unit} (${micro.vdr}%)</li>`;
-                    });
-                    micronutrientsHtml += '</ul>';
-                }
-                // Construye el HTML para otros micronutrientes.
-                if (others.length > 0) {
-                    micronutrientsHtml += '<strong>Otros:</strong><ul>';
-                    others.forEach(micro => {
-                        micronutrientsHtml += `<li>${micro.name}: ${micro.value}${micro.unit}</li>`; // Otros quizás no tienen VDR.
-                    });
-                    micronutrientsHtml += '</ul>';
-                }
-
+                let micronutrientsHtml = topMicrosHtml('Vitamina', 'Vitaminas') + topMicrosHtml('Mineral', 'Minerales');
                 if (micronutrientsHtml === '') {
                     micronutrientsHtml = '<p>No disponibles</p>';
                 }
 
-                // Genera el HTML completo para una tarjeta de alimento.
                 const cardHtml = `
                     <div class="food-card" data-index="${foodData.indexOf(food)}" onclick="openDetailModal(${foodData.indexOf(food)})">
                         <h3>${food.name}</h3>
@@ -1481,24 +1435,18 @@
                         </div>
                     </div>
                 `;
-                foodListDiv.insertAdjacentHTML('beforeend', cardHtml); // Inserta la tarjeta en el DOM.
+                foodListDiv.insertAdjacentHTML('beforeend', cardHtml);
             });
 
-            // L_E_O: Lógica para mostrar/ocultar el botón "Cargar Más".
-            if (filteredAndSortedData.length > displayedFoodCount) {
-                loadMoreBtn.style.display = 'block';
-            } else {
-                loadMoreBtn.style.display = 'none';
-            }
+            loadMoreBtn.style.display = filteredAndSortedData.length > displayedFoodCount ? 'block' : 'none';
         }
 
         /**
          * Incrementa la cantidad de alimentos a mostrar y vuelve a renderizar la lista.
-         * Se activa al hacer clic en el botón "Cargar Más".
          */
         function loadMoreFoods() {
-            displayedFoodCount += ITEMS_PER_LOAD; // Aumenta el contador de alimentos a mostrar.
-            filterAndSortFoods(); // Vuelve a renderizar con la nueva cantidad.
+            displayedFoodCount += ITEMS_PER_LOAD;
+            filterAndSortFoods();
         }
 
         /**
@@ -1506,7 +1454,7 @@
          * @param {string} modalId - El ID del modal a abrir.
          */
         function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active'); // Añade la clase 'active' para mostrar el modal.
+            document.getElementById(modalId).classList.add('active');
         }
 
         /**
@@ -1514,7 +1462,7 @@
          * @param {string} modalId - El ID del modal a cerrar.
          */
         function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active'); // Elimina la clase 'active' para ocultar el modal.
+            document.getElementById(modalId).classList.remove('active');
         }
 
         /**
@@ -1524,23 +1472,15 @@
          */
         function getVdrProgressBarHtml(vdrPercent) {
             if (vdrPercent === '-') {
-                return `<div class="vdr-cell"><span class="vdr-text">-</span></div>`; // No hay VDR, no se muestra barra.
+                return `<div class="vdr-cell"><span class="vdr-text">-</span></div>`;
             }
             
             const percentValue = parseFloat(vdrPercent);
-            let fillClass = '';
-            // Asigna una clase CSS basada en el porcentaje para colorear la barra.
-            if (percentValue < 25) {
-                fillClass = 'low';
-            } else if (percentValue >= 25 && percentValue < 75) {
-                fillClass = 'medium';
-            } else if (percentValue >= 75 && percentValue <= 100) {
-                fillClass = 'high';
-            } else { // Más del 100%
-                fillClass = 'excess';
-            }
+            let fillClass = 'low';
+            if (percentValue >= 75) fillClass = 'high';
+            else if (percentValue >= 25) fillClass = 'medium';
+            if (percentValue > 100) fillClass = 'excess';
 
-            // Limita el ancho de la barra al 100% para visualización.
             const fillWidth = Math.min(percentValue, 100);
 
             return `
@@ -1559,60 +1499,53 @@
          */
         function openDetailModal(index) {
             const food = foodData[index];
-            if (!food) return; // Si el alimento no existe, no hace nada.
+            if (!food) return;
 
-            currentEditingFoodIndex = index; // Guarda el índice del alimento actual.
+            currentEditingFoodIndex = index;
 
             document.getElementById('detailFoodName').textContent = food.name;
             document.getElementById('detailCategory').textContent = food.category || 'No especificada';
             document.getElementById('detailCharacteristics').textContent = food.characteristics && food.characteristics.length > 0 ? food.characteristics.join(', ') : 'Ninguna';
+            const priceUnitDisplay = food.unitBase === 'g' ? 'kg' : 'L';
+            document.getElementById('detailPrice').textContent = `${food.price.toFixed(2)} €/${priceUnitDisplay}`;
 
-            // Resetea el selector de cantidad y el input personalizado en el modal de detalle.
+
             detailQuantitySelector.value = "100";
             detailCustomQuantityInput.value = "100";
             detailCustomQuantityInput.style.display = 'none';
 
-            updateDetailNutrients(food); // Actualiza los nutrientes para la cantidad por defecto (100g/ml).
+            updateDetailNutrients();
             
-            // Muestra el botón de eliminar en el modal de detalle.
-            document.getElementById('deleteFoodBtn').style.display = 'block';
-
             openModal('foodDetailModal');
         }
 
         /**
          * Actualiza la tabla de nutrientes en el modal de detalle basándose en la cantidad seleccionada.
-         * @param {Object} [foodItem=null] - El objeto alimento. Si es nulo, usa `foodData[currentEditingFoodIndex]`.
          */
-        function updateDetailNutrients(foodItem = null) {
-            const food = foodItem || foodData[currentEditingFoodIndex];
+        function updateDetailNutrients() {
+            const food = foodData[currentEditingFoodIndex];
             if (!food) return;
 
-            let quantityFactor = 1;
+            let quantity = 100;
             const selectedOption = detailQuantitySelector.value;
-
-            // Calcula el factor de escala basado en la cantidad seleccionada o personalizada.
+            
             if (selectedOption === "user") {
                 detailCustomQuantityInput.style.display = 'inline-block';
                 const customQty = parseFloat(detailCustomQuantityInput.value);
                 if (!isNaN(customQty) && customQty > 0) {
-                    quantityFactor = customQty / 100;
-                } else {
-                    quantityFactor = 1; // Por defecto a 100 si la entrada personalizada es inválida.
+                    quantity = customQty;
                 }
             } else {
                 detailCustomQuantityInput.style.display = 'none';
-                quantityFactor = parseFloat(selectedOption) / 100;
+                quantity = parseFloat(selectedOption);
             }
+            const quantityFactor = quantity / 100;
 
-            // Actualiza la etiqueta de la unidad de detalle (ej. "Valores por 100g").
-            const detailDisplayUnit = `${(100 * quantityFactor)} ${food.unitBase}`;
-            document.getElementById('detailUnitLabel').textContent = detailDisplayUnit;
+            detailUnitLabel.textContent = food.unitBase;
             
-            detailNutrientTableBody.innerHTML = ''; // Limpia el contenido de la tabla de nutrientes.
+            detailNutrientTableBody.innerHTML = '';
 
-            // Define las filas de macronutrientes a mostrar.
-            const macroRows = [
+            const nutrientsToShow = [
                 { name: "Calorías", value: food.calories, unit: "Kcal", vdrKey: "calories" },
                 { name: "Grasas", value: food.fat, unit: "g", vdrKey: "fat" },
                 { name: "de las cuales saturadas", value: food.saturatedFat, unit: "g", vdrKey: "saturatedFat", isSub: true },
@@ -1623,10 +1556,9 @@
                 { name: "Sal", value: food.salt, unit: "g", vdrKey: "salt" }
             ];
 
-            // Añade las filas de macronutrientes a la tabla.
-            macroRows.forEach(nutrient => {
+            nutrientsToShow.forEach(nutrient => {
                 const row = document.createElement('tr');
-                row.className = nutrient.isSub ? 'sub-nutrient-row' : ''; // Clase para sangría de sub-nutrientes.
+                row.className = nutrient.isSub ? 'sub-nutrient-row' : '';
                 const scaledValue = (nutrient.value * quantityFactor).toFixed(nutrient.unit === 'g' ? 1 : 0);
                 const vdrPercent = calculateVDR(nutrient.value * quantityFactor, nutrient.vdrKey, nutrient.unit);
                 row.innerHTML = `
@@ -1637,39 +1569,21 @@
                 detailNutrientTableBody.appendChild(row);
             });
 
-            // Clasifica los micronutrientes por tipo.
-            const vitamins = [];
-            const minerals = [];
-            const others = [];
+            const vitamins = [], minerals = [], others = [];
+            Object.entries(food.micronutrients).forEach(([name, data]) => {
+                const item = { name, ...data };
+                if (data.type === "Vitamina") vitamins.push(item);
+                else if (data.type === "Mineral") minerals.push(item);
+                else others.push(item);
+            });
 
-            for (const [name, data] of Object.entries(food.micronutrients)) {
-                if (data.type === "Vitamina") {
-                    vitamins.push({ name, ...data });
-                } else if (data.type === "Mineral") {
-                    minerals.push({ name, ...data });
-                } else {
-                    others.push({ name, ...data });
-                }
-            }
-
-            // Ordena los micronutrientes alfabéticamente por nombre.
-            vitamins.sort((a, b) => a.name.localeCompare(b.name));
-            minerals.sort((a, b) => a.name.localeCompare(b.name));
-            others.sort((a, b) => a.name.localeCompare(b.name));
-
-            /**
-             * Función auxiliar para añadir una sección de micronutrientes a la tabla de detalle.
-             * @param {string} title - Título de la sección (ej. "Vitaminas").
-             * @param {Array<Object>} nutrientsArray - Array de objetos de nutrientes para esa sección.
-             */
             const appendMicronutrientSection = (title, nutrientsArray) => {
                 if (nutrientsArray.length > 0) {
-                    const sectionHeaderRow = document.createElement('tr');
-                    sectionHeaderRow.className = 'section-divider';
-                    sectionHeaderRow.innerHTML = `<td colspan="3">${title}:</td>`;
-                    detailNutrientTableBody.appendChild(sectionHeaderRow);
-
-                    nutrientsArray.forEach(nutrient => {
+                    const headerRow = detailNutrientTableBody.insertRow();
+                    headerRow.className = 'section-divider';
+                    headerRow.innerHTML = `<td colspan="3">${title}:</td>`;
+                    
+                    nutrientsArray.sort((a,b) => a.name.localeCompare(b.name)).forEach(nutrient => {
                         const row = document.createElement('tr');
                         const scaledValue = (nutrient.value * quantityFactor).toFixed(nutrient.unit === 'g' ? 2 : 1);
                         const vdrPercent = calculateVDR(nutrient.value * quantityFactor, nutrient.name, nutrient.unit);
@@ -1683,16 +1597,13 @@
                 }
             };
 
-            // Añade las secciones de micronutrientes.
             appendMicronutrientSection('Vitaminas', vitamins);
             appendMicronutrientSection('Minerales', minerals);
             appendMicronutrientSection('Otros Componentes', others);
 
-            // Mensaje si no hay vitaminas o minerales añadidas.
-            if (vitamins.length === 0 && minerals.length === 0 && others.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="3" style="text-align: center; color: var(--light-text-color);">No se han añadido vitaminas o minerales para este alimento.</td>`;
-                detailNutrientTableBody.appendChild(row);
+            if (Object.keys(food.micronutrients).length === 0) {
+                const row = detailNutrientTableBody.insertRow();
+                row.innerHTML = `<td colspan="3" style="text-align: center; color: var(--light-text-color);">No se han añadido vitaminas o minerales.</td>`;
             }
         }
 
@@ -1702,78 +1613,55 @@
          */
         function openEditModal(index) {
             currentEditingFoodIndex = index;
-            const isNewFood = index === -1; // Bandera para saber si es un nuevo alimento.
-            const food = isNewFood ? {} : foodData[index]; // Obtiene el alimento o un objeto vacío para uno nuevo.
+            const isNewFood = index === -1;
+            const food = isNewFood ? {} : foodData[index];
 
             document.getElementById('editFoodNameHeader').textContent = isNewFood ? 'Nuevo Alimento' : food.name;
             document.getElementById('editFoodIndex').value = index;
-
-            // Muestra u oculta el botón de eliminar según si es un alimento nuevo o existente.
             deleteFoodBtn.style.display = isNewFood ? 'none' : 'block';
 
-            // L_E_O: Rellena el selector de categorías.
             const editCategorySelect = document.getElementById('editCategory');
             editCategorySelect.innerHTML = '<option value="">Selecciona una categoría</option>';
             foodCategories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                if (food.category === cat) option.selected = true; // Selecciona la categoría actual del alimento.
-                editCategorySelect.appendChild(option);
+                const isSelected = food.category === cat;
+                editCategorySelect.innerHTML += `<option value="${cat}" ${isSelected ? 'selected' : ''}>${cat}</option>`;
             });
-            // Asegura que para un nuevo alimento o categoría no definida, la opción por defecto esté seleccionada.
-            if (isNewFood || !food.category) {
-                editCategorySelect.value = "";
-            }
 
-            // L_E_O: Rellena los checkboxes de características especiales.
             const editCharacteristicsDiv = document.getElementById('editCharacteristics');
             editCharacteristicsDiv.innerHTML = '';
             specialCharacteristics.forEach(char => {
-                const id = `editChar_${char.replace(/\s+/g, '')}`; // ID único para cada checkbox.
-                const isChecked = isNewFood ? false : (food.characteristics && food.characteristics.includes(char));
+                const id = `editChar_${char.replace(/\s+/g, '')}`;
+                const isChecked = !isNewFood && food.characteristics && food.characteristics.includes(char);
                 editCharacteristicsDiv.innerHTML += `
-                    <label for="${id}">
-                        <input type="checkbox" id="${id}" value="${char}" ${isChecked ? 'checked' : ''}>
-                        ${char}
-                    </label>
-                `;
+                    <label for="${id}"><input type="checkbox" id="${id}" value="${char}" ${isChecked ? 'checked' : ''}> ${char}</label>`;
             });
 
-            // Actualiza la etiqueta de la unidad base en el modal de edición.
-            const editDisplayUnit = `100${isNewFood ? 'g' : food.unitBase}`;
-            document.getElementById('editUnitLabel').textContent = editDisplayUnit;
-            
-            // Establece la unidad base y actualiza la etiqueta del precio.
+            document.getElementById('editUnitLabel').textContent = isNewFood ? 'g' : food.unitBase;
             editUnitBaseSelect.value = isNewFood ? 'g' : food.unitBase;
             updatePriceInput(editUnitBaseSelect.value);
 
-            // Rellena los campos de macronutrientes y precio.
-            editPriceInput.value = isNewFood ? '' : food.price;
-            document.getElementById('editName').value = isNewFood ? '' : food.name;
-            document.getElementById('editProtein').value = isNewFood ? '' : food.protein;
-            document.getElementById('editCarbs').value = isNewFood ? '' : food.carbs;
-            document.getElementById('editSugars').value = isNewFood ? '' : food.sugars;
-            document.getElementById('editFat').value = isNewFood ? '' : food.fat;
-            document.getElementById('editSaturatedFat').value = isNewFood ? '' : food.saturatedFat;
-            document.getElementById('editFiber').value = isNewFood ? '' : food.fiber;
-            document.getElementById('editSalt').value = isNewFood ? '' : food.salt;
+            document.getElementById('editName').value = food.name || '';
+            editPriceInput.value = food.price || '';
+            document.getElementById('editProtein').value = food.protein || '';
+            document.getElementById('editCarbs').value = food.carbs || '';
+            document.getElementById('editSugars').value = food.sugars || '';
+            document.getElementById('editFat').value = food.fat || '';
+            document.getElementById('editSaturatedFat').value = food.saturatedFat || '';
+            document.getElementById('editFiber').value = food.fiber || '';
+            document.getElementById('editSalt').value = food.salt || '';
 
-            calculateAndDisplayCalories(); // Calcula y muestra las calorías iniciales.
+            calculateAndDisplayCalories();
             
-            editMicronutrientTableBody.innerHTML = ''; // Limpia los campos de micronutrientes existentes.
-            // Ordena y añade los campos de micronutrientes si el alimento ya existe.
-            const sortedMicros = isNewFood ? [] : Object.entries(food.micronutrients).sort((a, b) => a[0].localeCompare(b[0]));
-            sortedMicros.forEach(([name, data]) => {
-                addMicronutrientField(name, data.value, data.unit, data.type);
-            });
-            
-            // Si no hay micronutrientes, añade un campo vacío para empezar (si hay micronutrientes disponibles en la lista maestra).
-            if (sortedMicros.length === 0 && availableMicronutrients.length > 0) {
+            editMicronutrientTableBody.innerHTML = '';
+            if (!isNewFood) {
+                Object.entries(food.micronutrients).sort((a, b) => a[0].localeCompare(b[0])).forEach(([name, data]) => {
+                    addMicronutrientField(name, data.value, data.unit, data.type);
+                });
+            }
+            if (editMicronutrientTableBody.rows.length === 0) {
                 addMicronutrientField();
             }
-
-            // Limpia los mensajes de validación al abrir el modal.
+            
             document.querySelectorAll('.validation-message').forEach(span => span.style.display = 'none');
             document.querySelectorAll('.form-group input, .form-group select').forEach(input => input.classList.remove('invalid'));
 
@@ -1781,7 +1669,7 @@
         }
 
         /**
-         * Cierra el modal de detalle y abre el modal de edición para el alimento actualmente seleccionado.
+         * Cierra el modal de detalle y abre el modal de edición.
          */
         function openEditModalFromDetail() {
             closeModal('foodDetailModal');
@@ -1789,15 +1677,12 @@
         }
 
         /**
-         * Actualiza la etiqueta de la unidad de precio (kg o L) según la unidad base seleccionada.
+         * Actualiza la etiqueta de la unidad de precio (kg o L).
          * @param {string} unitBase - La unidad base seleccionada ("g" o "ml").
          */
         function updatePriceInput(unitBase) {
-            if (unitBase === 'g') {
-                priceUnitLabel.textContent = 'kg';
-            } else {
-                priceUnitLabel.textContent = 'L';
-            }
+            priceUnitLabel.textContent = unitBase === 'g' ? 'kg' : 'L';
+            document.getElementById('editUnitLabel').textContent = unitBase;
         }
 
         /**
@@ -1805,270 +1690,143 @@
          * @param {string} [currentName=''] - Nombre del micronutriente a precargar.
          * @param {number} [currentValue=''] - Valor del micronutriente a precargar.
          * @param {string} [currentUnit=''] - Unidad del micronutriente a precargar.
-         * @param {string} [currentType=''] - Tipo del micronutriente (Vitamina/Mineral/Otros) a precargar.
+         * @param {string} [currentType=''] - Tipo del micronutriente a precargar.
          */
         function addMicronutrientField(currentName = '', currentValue = '', currentUnit = '', currentType = '') {
-            const row = document.createElement('tr');
+            const row = editMicronutrientTableBody.insertRow();
             row.className = 'micronutrient-input-row';
 
-            // Crea un conjunto de nombres de micronutrientes ya seleccionados para deshabilitar opciones duplicadas.
-            const currentlySelectedNames = new Set(
-                Array.from(editMicronutrientTableBody.querySelectorAll('.micronutrient-name-select'))
-                    .map(select => select.value)
-                    .filter(name => name !== '' && name !== currentName) // Excluye el nutriente actual si se está precargando.
-            );
-
-            let optionsHtml = '<option value="">Selecciona un nutriente</option>';
-            // Ordena los micronutrientes disponibles alfabéticamente.
             const sortedAvailableMicros = [...availableMicronutrients].sort((a, b) => a.name.localeCompare(b.name));
-
-            // Genera las opciones para el selector de nombre del micronutriente.
+            let optionsHtml = '<option value="">Selecciona un nutriente</option>';
             sortedAvailableMicros.forEach(micro => {
-                const isDisabled = currentlySelectedNames.has(micro.name); // Deshabilita si ya está seleccionado.
-                const isSelected = micro.name === currentName; // Marca como seleccionado si coincide con el nutriente actual.
-                optionsHtml += `<option value="${micro.name}"
-                                data-unit="${micro.unit}"
-                                data-type="${micro.type}"
-                                ${isSelected ? 'selected' : ''}
-                                ${isDisabled && !isSelected ? 'disabled' : ''}>${micro.name}</option>`;
+                const isSelected = micro.name === currentName;
+                optionsHtml += `<option value="${micro.name}" data-unit="${micro.unit}" data-type="${micro.type}" ${isSelected ? 'selected' : ''}>${micro.name}</option>`;
             });
 
-            // Obtiene y ordena las unidades únicas de los micronutrientes disponibles para el selector de unidad.
             const unitOptions = Array.from(new Set(availableMicronutrients.map(m => m.unit))).sort();
-            let unitSelectHtml = '';
-            unitOptions.forEach(unit => {
-                const isSelectedUnit = unit === currentUnit;
-                unitSelectHtml += `<option value="${unit}" ${isSelectedUnit ? 'selected' : ''}>${unit}</option>`;
-            });
+            let unitSelectHtml = unitOptions.map(unit => `<option value="${unit}" ${unit === currentUnit ? 'selected' : ''}>${unit}</option>`).join('');
 
-            // Inserta el HTML de la fila en la tabla.
             row.innerHTML = `
-                <td>
-                    <select class="micronutrient-name-select" onchange="updateMicronutrientData(this)">
-                        ${optionsHtml}
-                    </select>
-                </td>
+                <td><select class="micronutrient-name-select" onchange="updateMicronutrientData(this)">${optionsHtml}</select></td>
                 <td>
                     <input type="number" step="0.01" min="0" placeholder="Cantidad" value="${currentValue}">
-                    <select class="micronutrient-unit-select">
-                        ${unitSelectHtml}
-                    </select>
+                    <select class="micronutrient-unit-select">${unitSelectHtml}</select>
                     <input type="hidden" class="micronutrient-type" value="${currentType}">
                 </td>
-                <td><button type="button" class="remove-btn" onclick="removeMicronutrientField(this, this.closest('tr').querySelector('.micronutrient-name-select').value)">&times;</button></td>
+                <td><button type="button" class="remove-btn" onclick="removeMicronutrientField(this)">&times;</button></td>
             `;
-            editMicronutrientTableBody.appendChild(row);
-
-            // Si se precargó un nutriente, asegura que la unidad y el tipo se actualicen correctamente.
-            if (currentName) {
-                const selectElement = row.querySelector('.micronutrient-name-select');
-                if (selectElement) {
-                    const selectedMicro = availableMicronutrients.find(m => m.name === currentName);
-                    if (selectedMicro) {
-                        row.querySelector('.micronutrient-unit-select').value = selectedMicro.unit;
-                        row.querySelector('.micronutrient-type').value = selectedMicro.type;
-                    }
-                }
-            }
-            updateAddButtonState(); // Actualiza el estado del botón "Añadir Vitamina/Mineral".
-            updateDropdownOptions(); // Actualiza las opciones de todos los selectores de micronutrientes.
+            updateDropdownOptions();
+            updateAddButtonState();
         }
 
         /**
-         * Elimina una fila de campo de micronutriente del modal de edición.
+         * Elimina una fila de campo de micronutriente.
          * @param {HTMLElement} button - El botón que activó la eliminación.
-         * @param {string} removedName - El nombre del micronutriente que se ha eliminado (para re-habilitar en otros selectores).
          */
-        function removeMicronutrientField(button, removedName) {
-            button.closest('tr').remove(); // Elimina la fila completa.
-            updateAddButtonState(); // Actualiza el estado del botón "Añadir".
-            updateDropdownOptions(); // Vuelve a habilitar la opción en otros selectores.
+        function removeMicronutrientField(button) {
+            button.closest('tr').remove();
+            updateDropdownOptions();
+            updateAddButtonState();
         }
 
         /**
-         * Actualiza la unidad y el tipo del micronutriente cuando se cambia la selección en el dropdown de nombres.
+         * Actualiza la unidad y el tipo del micronutriente cuando se cambia la selección.
          * @param {HTMLSelectElement} selectElement - El elemento <select> cuyo valor ha cambiado.
          */
         function updateMicronutrientData(selectElement) {
             const selectedOption = selectElement.options[selectElement.selectedIndex];
-            const unitSelect = selectElement.closest('tr').querySelector('.micronutrient-unit-select');
-            const typeHiddenInput = selectElement.closest('tr').querySelector('.micronutrient-type');
-
+            const row = selectElement.closest('tr');
+            const unitSelect = row.querySelector('.micronutrient-unit-select');
+            const typeInput = row.querySelector('.micronutrient-type');
             if (selectedOption && selectedOption.value) {
-                const unit = selectedOption.dataset.unit;
-                const type = selectedOption.dataset.type;
-                
-                unitSelect.value = unit;
-                typeHiddenInput.value = type;
-            } else {
-                // Si no se selecciona nada (opción vacía), limpia unidad y tipo.
-                unitSelect.value = '';
-                typeHiddenInput.value = '';
+                unitSelect.value = selectedOption.dataset.unit;
+                typeInput.value = selectedOption.dataset.type;
             }
-            updateAddButtonState(); // Actualiza el estado del botón "Añadir".
-            updateDropdownOptions(); // Re-evalúa las opciones habilitadas/deshabilitadas.
+            updateDropdownOptions();
         }
 
         /**
-         * Actualiza las opciones de todos los selectores de micronutrientes en el modal de edición.
-         * Deshabilita los micronutrientes que ya han sido seleccionados en otra fila para evitar duplicados.
+         * Actualiza las opciones de todos los selectores de micronutrientes para evitar duplicados.
          */
         function updateDropdownOptions() {
             const allSelects = editMicronutrientTableBody.querySelectorAll('.micronutrient-name-select');
-            
-            // Primero, re-habilita todas las opciones en todos los selectores.
+            const selectedNames = new Set(Array.from(allSelects).map(s => s.value).filter(Boolean));
             allSelects.forEach(select => {
                 Array.from(select.options).forEach(option => {
-                    option.disabled = false;
-                });
-            });
-
-            // Recopila los nombres de los micronutrientes actualmente seleccionados en CUALQUIER selector.
-            const currentlySelectedNames = new Set();
-            allSelects.forEach(select => {
-                if (select.value) {
-                    currentlySelectedNames.add(select.value);
-                }
-            });
-
-            // Itera de nuevo sobre todos los selectores para deshabilitar las opciones ya seleccionadas.
-            allSelects.forEach(select => {
-                const currentSelectionInThisDropdown = select.value; // El nutriente seleccionado en ESTE dropdown.
-                Array.from(select.options).forEach(option => {
-                    // Si la opción no es la que está seleccionada actualmente en este dropdown,
-                    // y el nombre de la opción ya está en el conjunto de nombres seleccionados globalmente, la deshabilita.
-                    if (option.value && option.value !== currentSelectionInThisDropdown && currentlySelectedNames.has(option.value)) {
-                        option.disabled = true;
-                    }
+                    option.disabled = selectedNames.has(option.value) && select.value !== option.value;
                 });
             });
         }
 
         /**
-         * Actualiza el estado (habilitado/deshabilitado y texto) del botón "Añadir Vitamina/Mineral".
-         * Se deshabilita si todos los micronutrientes disponibles ya han sido añadidos.
+         * Actualiza el estado del botón "Añadir Vitamina/Mineral".
          */
         function updateAddButtonState() {
             const addButton = document.querySelector('.add-micronutrient-btn');
-            
-            // Obtiene los nombres de los micronutrientes ya seleccionados en el formulario.
-            const selectedMicronutrientNames = new Set(
-                Array.from(editMicronutrientTableBody.querySelectorAll('.micronutrient-name-select'))
-                    .map(select => select.value)
-                    .filter(name => name !== '')
-            );
-            // Calcula cuántos micronutrientes aún no han sido seleccionados.
-            const remainingUnselectedCount = availableMicronutrients.length - selectedMicronutrientNames.size;
-
-            if (remainingUnselectedCount <= 0) {
-                addButton.disabled = true;
-                addButton.textContent = 'Todas las Vitaminas/Minerales añadidas';
-            } else {
-                addButton.disabled = false;
-                addButton.textContent = '+ Añadir Vitamina/Mineral';
-            }
+            const selectedCount = new Set(Array.from(editMicronutrientTableBody.querySelectorAll('.micronutrient-name-select')).map(s => s.value).filter(Boolean)).size;
+            addButton.disabled = selectedCount >= availableMicronutrients.length;
+            addButton.textContent = addButton.disabled ? 'Todas las Vitaminas/Minerales añadidas' : '+ Añadir Vitamina/Mineral';
         }
 
-        // Listener para el envío del formulario de edición/creación de alimento.
         document.getElementById('editFoodForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Previene el envío por defecto del formulario.
+            event.preventDefault();
 
-            // Realiza la validación de macronutrientes y campos obligatorios.
-            if (!validateMacronutrients() || !validateFormFields()) {
+            if (!validateFormFields() || !validateMacronutrients()) {
                 showToast('Por favor, corrige los errores en el formulario.');
-                return; // Detiene el envío si hay errores de validación.
+                return;
             }
 
             const index = parseInt(document.getElementById('editFoodIndex').value);
             const isNewFood = index === -1;
-            let food;
+            let food = isNewFood ? { micronutrients: {}, characteristics: [] } : foodData[index];
 
-            if (isNewFood) {
-                // Si es un nuevo alimento, crea un objeto vacío con propiedades iniciales.
-                food = { micronutrients: {}, characteristics: [] };
-                foodData.push(food); // Añade el nuevo alimento al array de datos.
-                currentEditingFoodIndex = foodData.length - 1; // Actualiza el índice al del nuevo alimento.
-            } else {
-                food = foodData[index]; // Si es un alimento existente, toma el objeto actual.
-            }
-            
-            // Asigna los valores de los campos del formulario al objeto 'food'.
             food.name = document.getElementById('editName').value.trim();
             food.unitBase = editUnitBaseSelect.value;
             food.price = parseFloat(editPriceInput.value);
             food.category = document.getElementById('editCategory').value;
+            
+            food.characteristics = Array.from(document.querySelectorAll('#editCharacteristics input:checked')).map(cb => cb.value);
 
-            // Recopila las características especiales seleccionadas.
-            const selectedCharacteristics = [];
-            document.querySelectorAll('#editCharacteristics input[type="checkbox"]:checked').forEach(checkbox => {
-                selectedCharacteristics.push(checkbox.value);
-            });
-            food.characteristics = selectedCharacteristics;
+            food.protein = parseFloat(document.getElementById('editProtein').value) || 0;
+            food.carbs = parseFloat(document.getElementById('editCarbs').value) || 0;
+            food.sugars = parseFloat(document.getElementById('editSugars').value) || 0;
+            food.fat = parseFloat(document.getElementById('editFat').value) || 0;
+            food.saturatedFat = parseFloat(document.getElementById('editSaturatedFat').value) || 0;
+            food.fiber = parseFloat(document.getElementById('editFiber').value) || 0;
+            food.salt = parseFloat(document.getElementById('editSalt').value) || 0;
+            food.calories = getCalculatedCalories(food);
 
-            // Asigna los valores de los macronutrientes.
-            food.protein = parseFloat(document.getElementById('editProtein').value);
-            food.carbs = parseFloat(document.getElementById('editCarbs').value);
-            food.sugars = parseFloat(document.getElementById('editSugars').value);
-            food.fat = parseFloat(document.getElementById('editFat').value);
-            food.saturatedFat = parseFloat(document.getElementById('editSaturatedFat').value);
-            food.fiber = parseFloat(document.getElementById('editFiber').value);
-            food.salt = parseFloat(document.getElementById('editSalt').value);
-            food.calories = parseFloat(calculateCalories()); // Recalcula las calorías finales.
-
-            // Recopila los micronutrientes dinámicos.
-            food.micronutrients = {}; // Reinicia el objeto de micronutrientes.
-            const micronutrientRows = editMicronutrientTableBody.querySelectorAll('.micronutrient-input-row');
-            micronutrientRows.forEach(row => {
-                const nameSelect = row.querySelector('.micronutrient-name-select');
-                const valueInput = row.querySelector('input[type="number"]');
-                const unitSelect = row.querySelector('.micronutrient-unit-select');
-                const typeHiddenInput = row.querySelector('.micronutrient-type');
-                
-                const name = nameSelect.value.trim();
-                const value = parseFloat(valueInput.value);
-                const unit = unitSelect.value.trim();
-                const type = typeHiddenInput.value.trim();
-
-                // Solo añade el micronutriente si todos sus campos son válidos y están presentes.
+            food.micronutrients = {};
+            editMicronutrientTableBody.querySelectorAll('.micronutrient-input-row').forEach(row => {
+                const name = row.querySelector('.micronutrient-name-select').value;
+                const value = parseFloat(row.querySelector('input[type="number"]').value);
+                const unit = row.querySelector('.micronutrient-unit-select').value;
+                const type = row.querySelector('.micronutrient-type').value;
                 if (name && !isNaN(value) && value >= 0 && unit && type) {
-                    food.micronutrients[name] = {
-                        value: value,
-                        unit: unit,
-                        type: type
-                    };
+                    food.micronutrients[name] = { value, unit, type };
                 }
             });
 
-            filterAndSortFoods(); // Vuelve a filtrar y ordenar para actualizar la lista mostrada.
-            closeModal('foodEditModal'); // Cierra el modal de edición.
+            if (isNewFood) {
+                foodData.push(food);
+            }
+
+            filterAndSortFoods();
+            closeModal('foodEditModal');
             showToast(isNewFood ? '¡Alimento añadido con éxito!' : '¡Alimento actualizado con éxito!');
         });
 
         /**
-         * Valida todos los campos del formulario de edición de alimentos.
-         * - Comprueba que los campos requeridos no estén vacíos.
-         * - Comprueba que los campos numéricos sean números válidos y no negativos.
-         * Muestra mensajes de error específicos para cada campo inválido.
+         * Valida todos los campos requeridos del formulario de edición.
          * @returns {boolean} - True si todos los campos son válidos, false en caso contrario.
          */
         function validateFormFields() {
             let isValid = true;
-            const form = document.getElementById('editFoodForm');
-            // Selecciona todos los inputs y selects marcados como 'required'.
-            const requiredInputs = form.querySelectorAll('input[required], select[required]');
-
-            requiredInputs.forEach(input => {
-                const value = input.value.trim();
-                const messageSpan = input.nextElementSibling; // Asume que el span de validación es el siguiente hermano.
-
-                if (!value) {
+            document.querySelectorAll('#editFoodForm [required]').forEach(input => {
+                const messageSpan = input.nextElementSibling;
+                if (!input.value.trim() || (input.type === 'number' && parseFloat(input.value) < 0)) {
                     input.classList.add('invalid');
-                    messageSpan.textContent = 'Este campo es obligatorio.';
-                    messageSpan.style.display = 'block';
-                    isValid = false;
-                } else if (input.type === 'number' && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) {
-                    input.classList.add('invalid');
-                    messageSpan.textContent = 'Debe ser un número positivo.';
+                    messageSpan.textContent = !input.value.trim() ? 'Este campo es obligatorio.' : 'Debe ser un número positivo.';
                     messageSpan.style.display = 'block';
                     isValid = false;
                 } else {
@@ -2076,312 +1834,188 @@
                     messageSpan.style.display = 'none';
                 }
             });
-
-            // Valida los campos de micronutrientes dinámicos.
-            const micronutrientRows = editMicronutrientTableBody.querySelectorAll('.micronutrient-input-row');
-            micronutrientRows.forEach(row => {
-                const nameSelect = row.querySelector('.micronutrient-name-select');
-                const valueInput = row.querySelector('input[type="number"]');
-
-                // Si se ha seleccionado un nombre de micronutriente, valida la cantidad.
-                if (nameSelect.value) {
-                    const val = parseFloat(valueInput.value);
-                    if (isNaN(val) || val < 0) {
-                        valueInput.classList.add('invalid');
-                        let msgSpan = valueInput.nextElementSibling;
-                        if (!msgSpan || !msgSpan.classList.contains('validation-message')) {
-                            msgSpan = document.createElement('span');
-                            msgSpan.classList.add('validation-message');
-                            valueInput.parentNode.insertBefore(msgSpan, valueInput.nextSibling);
-                        }
-                        msgSpan.textContent = 'La cantidad debe ser un número positivo.';
-                        msgSpan.style.display = 'block';
-                        isValid = false;
-                    } else {
-                        valueInput.classList.remove('invalid');
-                        const msgSpan = valueInput.nextElementSibling;
-                        if (msgSpan && msgSpan.classList.contains('validation-message')) {
-                            msgSpan.style.display = 'none';
-                        }
-                    }
-                } else {
-                    // Si no se ha seleccionado un micronutriente pero hay un valor en el input (ej. el usuario borró la selección)
-                    valueInput.classList.remove('invalid'); // Asegura que no quede marcado como inválido si el nombre está vacío.
-                    const msgSpan = valueInput.nextElementSibling;
-                    if (msgSpan && msgSpan.classList.contains('validation-message')) {
-                        msgSpan.style.display = 'none';
-                    }
-                }
-            });
-
             return isValid;
         }
 
         /**
          * Muestra un modal de confirmación antes de eliminar un alimento.
-         * Cierra los modales de detalle y edición antes de abrir el de confirmación.
          */
         function confirmDeleteFood() {
-            closeModal('foodDetailModal'); // Cierra el modal de detalle si está abierto.
-            closeModal('foodEditModal'); // Cierra el modal de edición si está abierto.
-
+            closeModal('foodDetailModal');
+            closeModal('foodEditModal');
             const foodName = foodData[currentEditingFoodIndex].name;
-            confirmationMessage.innerHTML = `¿Estás seguro de que quieres **eliminar** el alimento: **${foodName}**? Esta acción no se puede deshacer.`;
-            confirmActionButton.onclick = deleteFood; // Asigna la función de eliminación al botón de confirmar.
-            confirmActionButton.className = 'btn btn-danger'; // Asegura que el botón sea de peligro (rojo).
+            confirmationMessage.innerHTML = `¿Estás seguro de que quieres eliminar <strong>${foodName}</strong>? Esta acción no se puede deshacer.`;
+            confirmActionButton.onclick = deleteFood;
             openModal('confirmationModal');
         }
 
         /**
-         * Elimina el alimento actualmente seleccionado de `foodData` y actualiza la interfaz.
-         * Se llama desde el modal de confirmación.
+         * Elimina el alimento actualmente seleccionado.
          */
         function deleteFood() {
-            foodData.splice(currentEditingFoodIndex, 1); // Elimina el alimento del array.
-            closeModal('confirmationModal'); // Cierra el modal de confirmación.
-            filterAndSortFoods(); // Vuelve a renderizar la lista para reflejar la eliminación.
+            foodData.splice(currentEditingFoodIndex, 1);
+            closeModal('confirmationModal');
+            filterAndSortFoods();
             showToast('¡Alimento eliminado con éxito!');
         }
 
         /**
-         * Alterna la visibilidad del selector de micronutrientes específico en la sección de ordenación.
-         * Esto se activa cuando se selecciona "Vitaminas", "Minerales" u "Otros" como criterio de ordenación.
+         * Alterna la visibilidad del selector de micronutrientes para la ordenación.
          */
         function toggleMicronutrientSortSelect() {
-            const sortCriteria = sortCriteriaSelect.value;
-            if (sortCriteria === 'vitamins' || sortCriteria === 'minerals' || sortCriteria === 'others') {
-                micronutrientSortContainer.style.display = 'flex'; // Muestra el contenedor.
-                populateMicronutrientSortSelect(sortCriteria); // Rellena el selector de micronutrientes.
-            } else {
-                micronutrientSortContainer.style.display = 'none'; // Oculta el contenedor.
-            }
+            const criteria = sortCriteriaSelect.value;
+            const show = ['vitamins', 'minerals', 'others'].includes(criteria);
+            micronutrientSortContainer.style.display = show ? 'flex' : 'none';
+            if (show) populateMicronutrientSortSelect(criteria);
         }
 
         /**
-         * Rellena el selector de micronutrientes para la ordenación con los nutrientes del tipo especificado.
+         * Rellena el selector de micronutrientes para la ordenación.
          * @param {string} type - El tipo de micronutriente a poblar ("vitamins", "minerals", "others").
          */
         function populateMicronutrientSortSelect(type) {
             sortMicronutrientSelect.innerHTML = '<option value="">Selecciona un nutriente</option>';
-            const uniqueMicrosOfType = new Set();
+            const typeMap = { vitamins: 'Vitamina', minerals: 'Mineral' };
+            const uniqueMicros = new Set();
             foodData.forEach(food => {
-                for (const [name, data] of Object.entries(food.micronutrients)) {
-                    const dataTypeNormalized = data.type.toLowerCase();
-                    const sortTypeNormalized = type.toLowerCase();
-
-                    // Comprueba si el tipo de micronutriente coincide con el criterio de ordenación.
-                    if ((sortTypeNormalized === 'vitamins' && dataTypeNormalized === 'vitamina') ||
-                        (sortTypeNormalized === 'minerals' && dataTypeNormalized === 'mineral') ||
-                        (sortTypeNormalized === 'others' && dataTypeNormalized !== 'vitamina' && dataTypeNormalized !== 'mineral')) {
-                        uniqueMicrosOfType.add(name);
-                    }
-                }
+                Object.entries(food.micronutrients).forEach(([name, data]) => {
+                    const match = type === 'others'
+                        ? !Object.values(typeMap).includes(data.type)
+                        : data.type === typeMap[type];
+                    if (match) uniqueMicros.add(name);
+                });
             });
-
-            const sortedMicros = Array.from(uniqueMicrosOfType).sort(); // Ordena los micronutrientes encontrados.
-            sortedMicros.forEach(microName => {
-                const option = document.createElement('option');
-                option.value = microName;
-                option.textContent = microName;
-                sortMicronutrientSelect.appendChild(option);
+            Array.from(uniqueMicros).sort().forEach(name => {
+                sortMicronutrientSelect.innerHTML += `<option value="${name}">${name}</option>`;
             });
-            // Restablece la selección si el micronutriente anteriormente seleccionado ya no está disponible para el nuevo tipo.
-            if (!sortedMicros.includes(sortMicronutrientSelect.value)) {
-                sortMicronutrientSelect.value = "";
-            }
         }
 
         /**
          * Alterna la visibilidad de la sección de filtros avanzados.
          */
         function toggleAdvancedFilters() {
-            advancedFilterContainer.classList.toggle('expanded'); // Alterna la clase 'expanded'.
+            advancedFilterContainer.classList.toggle('expanded');
             const toggleBtn = document.querySelector('.filter-toggle-btn');
-            // Cambia el texto del botón según el estado del panel.
-            if (advancedFilterContainer.classList.contains('expanded')) {
-                toggleBtn.textContent = 'Ocultar Filtros Avanzados';
-            } else {
-                toggleBtn.textContent = 'Mostrar Filtros Avanzados';
-            }
+            toggleBtn.textContent = advancedFilterContainer.classList.contains('expanded') 
+                ? 'Ocultar Filtros Avanzados' 
+                : 'Mostrar Filtros Avanzados';
         }
 
         /**
          * Restablece todos los campos de los filtros avanzados a sus valores por defecto.
-         * Luego, vuelve a aplicar los filtros y la ordenación para actualizar la lista de alimentos.
          */
         function resetAdvancedFilters() {
-            // Limpia los valores de los inputs numéricos.
-            filterCaloriesMin.value = '';
-            filterCaloriesMax.value = '';
-            filterProteinMin.value = '';
-            filterFatMax.value = '';
-            filterCarbsMin.value = '';
-            filterFiberMin.value = '';
-            filterSugarMax.value = '';
-            filterSaltMax.value = '';
-            filterPriceMax.value = '';
-            filterCategorySelect.value = ''; // Restablece la categoría a "Todas".
-
-            // Desmarca todos los checkboxes de características especiales.
-            document.querySelectorAll('#filterSpecialCharacteristics input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = false;
+            document.querySelectorAll('#advancedFilterContainer input, #advancedFilterContainer select').forEach(el => {
+                if (el.type === 'checkbox') el.checked = false;
+                else el.value = '';
             });
-
-            filterAndSortFoods(); // Vuelve a renderizar la lista con los filtros restablecidos.
+            filterAndSortFoods();
             showToast('Filtros avanzados restablecidos.');
         }
 
         /**
-         * Aplica los filtros (búsqueda y avanzados) y la ordenación a la lista de alimentos.
-         * Luego, renderiza las tarjetas de alimentos con los resultados.
+         * Aplica filtros y ordenación a la lista de alimentos y la renderiza.
          */
         function filterAndSortFoods() {
-            let displayedFoods = [...foodData]; // Crea una copia para no modificar el array original.
-
             const searchTerm = searchInput.value.toLowerCase();
-            const sortByCriteria = sortCriteriaSelect.value;
-            const sortDirection = sortDirectionSelect.value;
-            const sortMicronutrient = sortMicronutrientSelect.value;
+            const sortBy = sortCriteriaSelect.value;
+            const sortDir = sortDirectionSelect.value;
+            const sortMicro = sortMicronutrientSelect.value;
 
-            // Paso 1: Aplicar Filtro de Búsqueda
-            if (searchTerm) {
-                displayedFoods = displayedFoods.filter(food =>
-                    food.name.toLowerCase().includes(searchTerm)
-                );
-            }
+            const filters = {
+                caloriesMin: parseFloat(filterCaloriesMin.value), proteinMin: parseFloat(filterProteinMin.value),
+                fatMax: parseFloat(filterFatMax.value), carbsMin: parseFloat(filterCarbsMin.value),
+                fiberMin: parseFloat(filterFiberMin.value), sugarMax: parseFloat(filterSugarMax.value),
+                saltMax: parseFloat(filterSaltMax.value), priceMax: parseFloat(filterPriceMax.value),
+                category: filterCategorySelect.value,
+                characteristics: Array.from(document.querySelectorAll('#filterSpecialCharacteristics input:checked')).map(cb => cb.value)
+            };
 
-            // Paso 2: Aplicar Filtros Avanzados
-            const filterCalMin = parseFloat(filterCaloriesMin.value);
-            const filterCalMax = parseFloat(filterCaloriesMax.value);
-            const filterProtMin = parseFloat(filterProteinMin.value);
-            const filterFatMx = parseFloat(filterFatMax.value);
-            const filterCarbsMinVal = parseFloat(filterCarbsMin.value);
-            const filterFiberMinVal = parseFloat(filterFiberMin.value);
-            const filterSugarMx = parseFloat(filterSugarMax.value);
-            const filterSaltMx = parseFloat(filterSaltMax.value);
-            const filterPriceMx = parseFloat(filterPriceMax.value);
-            const filterCat = filterCategorySelect.value;
-            // Obtiene las características especiales seleccionadas en los filtros.
-            const selectedCharacteristics = Array.from(document.querySelectorAll('#filterSpecialCharacteristics input[type="checkbox"]:checked')).map(cb => cb.value);
-
-            displayedFoods = displayedFoods.filter(food => {
-                // Filtros de macronutrientes (rango o máximo/mínimo)
-                if (!isNaN(filterCalMin) && food.calories < filterCalMin) return false;
-                if (!isNaN(filterCalMax) && food.calories > filterCalMax) return false;
-                if (!isNaN(filterProtMin) && food.protein < filterProtMin) return false;
-                if (!isNaN(filterFatMx) && food.fat > filterFatMx) return false;
-                if (!isNaN(filterCarbsMinVal) && food.carbs < filterCarbsMinVal) return false;
-                if (!isNaN(filterFiberMinVal) && food.fiber < filterFiberMinVal) return false;
-                if (!isNaN(filterSugarMx) && food.sugars > filterSugarMx) return false;
-                if (!isNaN(filterSaltMx) && food.salt > filterSaltMx) return false;
-
-                // Filtro de precio (siempre por kg/L)
-                const foodPricePerKgOrL = food.price; // El precio ya está almacenado por kg/L.
-                if (!isNaN(filterPriceMx) && foodPricePerKgOrL > filterPriceMx) return false;
-
-                // Filtro de categoría
-                if (filterCat && food.category !== filterCat) return false;
-
-                // Filtro de características: asegura que el alimento tenga TODAS las características seleccionadas.
-                if (selectedCharacteristics.length > 0) {
-                    const hasAllCharacteristics = selectedCharacteristics.every(char =>
-                        food.characteristics && food.characteristics.includes(char)
-                    );
-                    if (!hasAllCharacteristics) return false;
-                }
-
-                return true; // Si el alimento pasa todos los filtros, lo incluye.
+            let displayedFoods = foodData.filter(food => {
+                if (searchTerm && !food.name.toLowerCase().includes(searchTerm)) return false;
+                if (!isNaN(filters.caloriesMin) && food.calories < filters.caloriesMin) return false;
+                if (!isNaN(filters.proteinMin) && food.protein < filters.proteinMin) return false;
+                if (!isNaN(filters.fatMax) && food.fat > filters.fatMax) return false;
+                if (!isNaN(filters.carbsMin) && food.carbs < filters.carbsMin) return false;
+                if (!isNaN(filters.fiberMin) && food.fiber < filters.fiberMin) return false;
+                if (!isNaN(filters.sugarMax) && food.sugars > filters.sugarMax) return false;
+                if (!isNaN(filters.saltMax) && food.salt > filters.saltMax) return false;
+                if (!isNaN(filters.priceMax) && food.price > filters.priceMax) return false;
+                if (filters.category && food.category !== filters.category) return false;
+                if (filters.characteristics.length > 0 && !filters.characteristics.every(char => food.characteristics.includes(char))) return false;
+                return true;
             });
 
-            // Paso 3: Aplicar Ordenación
             displayedFoods.sort((a, b) => {
                 let valA, valB;
-                let comparison = 0;
-
-                switch (sortByCriteria) {
-                    case 'name':
-                        comparison = a.name.localeCompare(b.name);
-                        break;
-                    case 'calories':
-                        valA = a.calories;
-                        valB = b.calories;
-                        comparison = valA - valB;
-                        break;
-                    case 'protein':
-                        valA = a.protein;
-                        valB = b.protein;
-                        comparison = valA - valB;
-                        break;
-                    case 'fat':
-                        valA = a.fat;
-                        valB = b.fat;
-                        comparison = valA - valB;
-                        break;
-                    case 'carbs':
-                        valA = a.carbs;
-                        valB = b.carbs;
-                        comparison = valA - valB;
-                        break;
-                    case 'fiber':
-                        valA = a.fiber;
-                        valB = b.fiber;
-                        comparison = valA - valB;
-                        break;
-                    case 'vitamins':
-                    case 'minerals':
-                    case 'others':
-                        // Ordenación por micronutriente específico si está seleccionado.
-                        if (sortMicronutrient) {
-                            valA = a.micronutrients[sortMicronutrient] ? a.micronutrients[sortMicronutrient].value : 0;
-                            valB = b.micronutrients[sortMicronutrient] ? b.micronutrients[sortMicronutrient].value : 0;
-                            comparison = valA - valB;
-                        } else {
-                            comparison = 0; // No hay micronutriente específico, no hay ordenación por este criterio.
-                        }
-                        break;
-                    default:
-                        comparison = 0;
+                if (['vitamins', 'minerals', 'others'].includes(sortBy) && sortMicro) {
+                    valA = a.micronutrients[sortMicro]?.value || 0;
+                    valB = b.micronutrients[sortMicro]?.value || 0;
+                } else if (sortBy === 'name') {
+                    return sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+                } else {
+                    valA = a[sortBy] || 0;
+                    valB = b[sortBy] || 0;
                 }
-
-                // Aplica la dirección de ordenación (ascendente o descendente).
-                return sortDirection === 'asc' ? comparison : -comparison;
+                return sortDir === 'asc' ? valA - valB : valB - valA;
             });
 
-            // L_E_O: Reinicia el contador de alimentos mostrados cuando los filtros cambian,
-            // para que la paginación funcione correctamente con los nuevos resultados filtrados/ordenados.
             displayedFoodCount = ITEMS_PER_LOAD;
-            renderFoodCards(displayedFoods); // Renderiza la lista actualizada.
+            renderFoodCards(displayedFoods);
         }
 
         /**
-         * Exporta los datos de los alimentos a un archivo JSON descargable.
-         * Antes de exportar, asegura que las calorías estén calculadas.
+         * Exporta los datos de los alimentos a un archivo JSON.
          */
         function exportData() {
-            // Recalcula las calorías para asegurar que estén actualizadas antes de exportar.
-            foodData.forEach(food => {
-                const protein = food.protein || 0;
-                const carbs = food.carbs || 0;
-                const fat = food.fat || 0;
-                food.calories = parseFloat(((protein * 4) + (carbs * 4) + (fat * 9)).toFixed(1));
-            });
-
-            const dataStr = JSON.stringify(foodData, null, 2); // Convierte los datos a una cadena JSON formateada.
-            const blob = new Blob([dataStr], { type: 'application/json' }); // Crea un Blob con los datos.
-            const url = URL.createObjectURL(blob); // Crea una URL para el Blob.
-            const a = document.createElement('a'); // Crea un elemento <a> para la descarga.
+            foodData.forEach(food => food.calories = getCalculatedCalories(food)); // Asegura calorías actualizadas
+            const dataStr = JSON.stringify(foodData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
             a.href = url;
-            a.download = 'alimentos.json'; // Nombre del archivo.
-            document.body.appendChild(a);
-            a.click(); // Simula un clic para iniciar la descarga.
-            document.body.removeChild(a); // Limpia el elemento <a>.
-            URL.revokeObjectURL(url); // Libera la URL del Blob.
+            a.download = 'alimentos.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            a.remove();
             showToast('¡Datos exportados con éxito!');
         }
 
         /**
-         * Importa datos de alimentos desde un archivo JSON seleccionado por el usuario.
-         * Realiza una validación básica del formato del JSON importado.
+         * Normaliza los datos de un alimento, especialmente para manejar inconsistencias en el JSON.
+         * @param {object} food - El objeto alimento a normalizar.
+         * @returns {object} - El objeto alimento normalizado.
+         */
+        function normalizeFoodData(food) {
+            // Normaliza unitBase
+            if (food.unitBase && typeof food.unitBase === 'string') {
+                if (food.unitBase.includes('g')) food.unitBase = 'g';
+                else if (food.unitBase.includes('ml')) food.unitBase = 'ml';
+            } else {
+                food.unitBase = 'g'; // Valor por defecto
+            }
+
+            // Normaliza valores nutricionales si la base no es 100 (ej. Ajo 10g)
+            // Esta parte requeriría una lógica más compleja si el JSON tuviera un campo para la base (ej. "baseQty": 10)
+            
+            // Asegura que las propiedades numéricas existan y sean números
+            ['protein', 'carbs', 'sugars', 'fat', 'saturatedFat', 'fiber', 'salt', 'price'].forEach(prop => {
+                food[prop] = parseFloat(food[prop]) || 0;
+            });
+
+            // Calcula las calorías
+            food.calories = getCalculatedCalories(food);
+
+            // Asegura que micronutrients y characteristics sean objetos/arrays válidos
+            food.micronutrients = food.micronutrients && typeof food.micronutrients === 'object' ? food.micronutrients : {};
+            food.characteristics = Array.isArray(food.characteristics) ? food.characteristics : [];
+            
+            return food;
+        }
+
+
+        /**
+         * Importa datos de alimentos desde un archivo JSON.
          * @param {Event} event - El evento de cambio del input de archivo.
          */
         function importData(event) {
@@ -2391,125 +2025,67 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const imported = JSON.parse(e.target.result); // Parsea el contenido JSON.
-                    // L_E_O: Validación más estricta para la importación:
-                    // Verifica que sea un array y que cada elemento tenga las propiedades esenciales.
-                    if (Array.isArray(imported) && imported.every(item =>
-                        item.name && typeof item.protein === 'number' && typeof item.carbs === 'number' &&
-                        typeof item.fat === 'number' && item.hasOwnProperty('unitBase') &&
-                        item.hasOwnProperty('price') && Array.isArray(item.characteristics) && item.category &&
-                        typeof item.micronutrients === 'object'
-                    )) {
-                        foodData = imported; // Reemplaza los datos existentes con los importados.
-                        // Recalcula las calorías para los alimentos importados (por si no estaban).
-                        foodData.forEach(food => {
-                            const protein = food.protein || 0;
-                            const carbs = food.carbs || 0;
-                            const fat = food.fat || 0;
-                            food.calories = parseFloat(((protein * 4) + (carbs * 4) + (fat * 9)).toFixed(1));
-                        });
-                        filterAndSortFoods(); // Actualiza la interfaz con los nuevos datos.
-                        showToast('¡Datos importados con éxito!');
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported) && imported.every(item => item.name && item.category)) {
+                        foodData = imported.map(normalizeFoodData);
+                        initUI();
+                        showToast('¡Datos importados y normalizados con éxito!');
                     } else {
-                        showToast('Error: El archivo JSON no tiene el formato esperado. Asegúrate de que contiene un array de alimentos con todas las propiedades requeridas (nombre, macronutrientes, unitBase, price, category, characteristics, micronutrients).');
-                        console.error('Error: Invalid JSON format for import.', imported);
+                        showToast('Error: El JSON importado no es un array válido de alimentos.');
                     }
                 } catch (error) {
-                    showToast('Error al parsear el archivo JSON. Asegúrate de que es un JSON válido.');
+                    showToast('Error al procesar el archivo JSON.');
                     console.error('Error importing JSON:', error);
                 }
             };
-            reader.readAsText(file); // Lee el archivo como texto.
+            reader.readAsText(file);
         }
 
         /**
-         * Función para cargar datos desde un archivo JSON local (en la misma carpeta).
-         * Asume que el archivo se llama `alimentos.json`.
+         * Carga los datos iniciales desde el archivo alimentos.json.
          */
         async function loadFoodDataFromFile() {
             try {
-                // L_E_O: Intenta obtener el archivo JSON.
                 const response = await fetch('alimentos.json'); 
-                if (!response.ok) {
-                    // Si el archivo no se encuentra o hay un error HTTP, lanza un error.
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json(); // Parsea la respuesta como JSON.
-                // Valida el formato de los datos cargados.
-                if (Array.isArray(data) && data.every(item =>
-                    item.name && typeof item.protein === 'number' && typeof item.carbs === 'number' &&
-                    typeof item.fat === 'number' && item.hasOwnProperty('unitBase') &&
-                    item.hasOwnProperty('price') && Array.isArray(item.characteristics) && item.category &&
-                    typeof item.micronutrients === 'object'
-                )) {
-                    foodData = data; // Asigna los datos cargados a `foodData`.
-                    // Recalcula las calorías para asegurar que estén correctas después de la carga.
-                    foodData.forEach(food => {
-                        const protein = food.protein || 0;
-                        const carbs = food.carbs || 0;
-                        const fat = food.fat || 0;
-                        food.calories = parseFloat(((protein * 4) + (carbs * 4) + (fat * 9)).toFixed(1));
-                    });
-                    showToast('¡Datos cargados desde alimentos.json con éxito!');
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    foodData = data.map(normalizeFoodData);
                 } else {
-                    console.error('Error: El archivo alimentos.json no tiene el formato esperado.');
-                    showToast('Error: Formato de datos incorrecto en alimentos.json.');
+                     showToast('Error: alimentos.json no contiene un array.');
                 }
             } catch (error) {
-                console.error('Error al cargar alimentos.json:', error);
-                showToast('Error al cargar alimentos.json. Asegúrate de que el archivo existe y es válido.');
+                console.error('No se pudo cargar alimentos.json:', error);
+                showToast('No se pudo cargar la base de datos inicial.');
             } finally {
-                // Siempre inicializa la UI después de intentar cargar los datos.
-                populateFilterCategories(); // Rellena las categorías.
-                populateFilterSpecialCharacteristics(); // Rellena las características especiales.
-                toggleMicronutrientSortSelect(); // Inicializa el selector de micronutrientes para la ordenación.
-                filterAndSortFoods(); // Realiza el renderizado inicial y aplica cualquier filtro/ordenación por defecto.
+                initUI();
             }
         }
-
+        
         /**
-         * Rellena los selectores de categorías de alimentos en los filtros y en el modal de edición.
+         * Inicializa y puebla los componentes de la UI (filtros, categorías, etc).
          */
-        function populateFilterCategories() {
-            // Rellena el selector de categorías en los filtros.
+        function initUI() {
+            // Poblar filtros
             filterCategorySelect.innerHTML = '<option value="">Todas</option>';
-            foodCategories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                filterCategorySelect.appendChild(option);
+            foodCategories.sort().forEach(cat => {
+                filterCategorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
             });
-            // También rellena el selector de categorías en el modal de edición/añadir.
-            const editCategorySelect = document.getElementById('editCategory');
-            editCategorySelect.innerHTML = '<option value="">Selecciona una categoría</option>';
-            foodCategories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                editCategorySelect.appendChild(option);
-            });
-        }
 
-        /**
-         * Rellena los checkboxes de características especiales en la sección de filtros avanzados.
-         */
-        function populateFilterSpecialCharacteristics() {
-            filterSpecialCharacteristicsDiv.innerHTML = ''; // Limpia los checkboxes existentes
-            specialCharacteristics.forEach(char => {
-                const id = `filterChar_${char.replace(/\s+/g, '')}`; // Crea un ID único para cada checkbox.
+            filterSpecialCharacteristicsDiv.innerHTML = '';
+            specialCharacteristics.sort().forEach(char => {
+                const id = `filterChar_${char.replace(/\s+/g, '')}`;
                 filterSpecialCharacteristicsDiv.innerHTML += `
-                    <label for="${id}">
-                        <input type="checkbox" id="${id}" value="${char}" onchange="filterAndSortFoods()">
-                        ${char}
-                    </label>
-                `;
+                    <label for="${id}"><input type="checkbox" id="${id}" value="${char}" onchange="filterAndSortFoods()"> ${char}</label>`;
             });
+
+            toggleMicronutrientSortSelect();
+            filterAndSortFoods();
         }
 
         // L_E_O: Configuración inicial al cargar el DOM.
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFoodDataFromFile(); // L_E_O: Llama a la nueva función para cargar datos desde el archivo JSON.
-        });
+        document.addEventListener('DOMContentLoaded', loadFoodDataFromFile);
     </script>
 </body>
 </html>
