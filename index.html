@@ -1133,51 +1133,9 @@
 
     <script>
         // L_E_O: Almacenamiento de Datos y Configuración Inicial
-        // Array principal que contiene todos los datos de los alimentos.
-        // Se ha reducido la cantidad de alimentos predefinidos a 4 para una carga más rápida.
-        let foodData = [
-            {
-                name: "Pechuga de Pollo", calories: 165.2, protein: 31, carbs: 0, sugars: 0, fat: 3.6, saturatedFat: 1, salt: 0.1, fiber: 0,
-                price: 6.50, unitBase: "g", category: "Carnes y Proteínas", characteristics: ["Bajo en Grasa", "Alto en Proteínas"],
-                micronutrients: {
-                    "Vitamina B3": { value: 11.2, unit: "mg", type: "Vitamina" },
-                    "Fósforo": { value: 240, unit: "mg", type: "Mineral" },
-                    "Vitamina B6": { value: 0.5, unit: "mg", type: "Vitamina" },
-                    "Potasio": { value: 255, unit: "mg", type: "Mineral" }
-                }
-            },
-            {
-                name: "Arroz Integral", calories: 332.8, protein: 7.3, carbs: 77.2, sugars: 0.2, fat: 1.9, saturatedFat: 0.4, salt: 0.01, fiber: 3.4,
-                price: 2.20, unitBase: "g", category: "Pan, Cereales y Legumbres", characteristics: ["Apto Vegano", "Sin Lactosa", "Alto en Fibra"],
-                micronutrients: {
-                    "Magnesio": { value: 143, unit: "mg", type: "Mineral" },
-                    "Fósforo": { value: 333, unit: "mg", type: "Mineral" },
-                    "Vitamina B1": { value: 0.4, unit: "mg", type: "Vitamina" },
-                    "Hierro": { value: 0.8, unit: "mg", type: "Mineral" }
-                }
-            },
-            {
-                name: "Brócoli", calories: 50.4, protein: 3.7, carbs: 11.2, sugars: 2.3, fat: 0.6, saturatedFat: 0.1, salt: 0.03, fiber: 3.3,
-                price: 3.80, unitBase: "g", category: "Verduras y Hortalizas", characteristics: ["Apto Vegano", "Sin Glúten", "Alto en Vitamina C"],
-                micronutrients: {
-                    "Vitamina C": { value: 89.2, unit: "mg", type: "Vitamina" },
-                    "Vitamina K1": { value: 101.6, unit: "mcg", type: "Vitamina" }, // Separado Vitamina K1
-                    "Vitamina K2": { value: 0.5, unit: "mcg", type: "Vitamina" },   // Añadido Vitamina K2
-                    "Folato": { value: 108, unit: "mcg", type: "Vitamina" },
-                    "Hierro": { value: 0.7, unit: "mg", type: "Mineral" }
-                }
-            },
-            {
-                name: "Salmón", calories: 208.0, protein: 20, carbs: 0, sugars: 0, fat: 13, saturatedFat: 3.1, salt: 0.08, fiber: 0,
-                price: 18.00, unitBase: "g", category: "Carnes y Proteínas", characteristics: ["Rico en Omega-3", "Fuente de Vitamina D"],
-                micronutrients: {
-                    "Vitamina D": { value: 10.9, unit: "mcg", type: "Vitamina" },
-                    "Selenio": { value: 36.5, unit: "mcg", type: "Mineral" },
-                    "Vitamina B12": { value: 3.2, unit: "mcg", type: "Vitamina" },
-                    "Omega-3": { value: 2.5, unit: "g", type: "Otros" }
-                }
-            }
-        ];
+        // Array principal que contendrá todos los datos de los alimentos.
+        // Ahora se inicializa vacío y se cargará desde el JSON.
+        let foodData = [];
 
         // L_E_O: Categorías de alimentos para filtrado y clasificación.
         const foodCategories = [
@@ -1198,7 +1156,7 @@
             "Bajo en Grasa", "Rico en Omega-3", "Fuente de Calcio", "Probiótico",
             "Sin Glúten", "Alto en Proteínas", "Alto en Vitamina C", "Alto en Hierro",
             "Rico en Vitamina E", "Alto en Vitamina K", "Bajo en Azúcares", "Sin Calorías",
-            "Fuente de Vitamina D" // Añadida característica según ejemplo de salmón
+            "Fuente de Vitamina D"
         ];
 
         // L_E_O: Lista predefinida de micronutrientes disponibles para añadir.
@@ -1210,8 +1168,8 @@
             { name: "Vitamina B9 (Folato)", unit: "mcg", type: "Vitamina" }, { name: "Vitamina B12", unit: "mcg", type: "Vitamina" },
             { name: "Vitamina C", unit: "mg", type: "Vitamina" }, { name: "Vitamina D", unit: "mcg", type: "Vitamina" },
             { name: "Vitamina E", unit: "mg", type: "Vitamina" },
-            { name: "Vitamina K1", unit: "mcg", type: "Vitamina" }, // Separado
-            { name: "Vitamina K2", unit: "mcg", type: "Vitamina" }, // Añadido
+            { name: "Vitamina K1", unit: "mcg", type: "Vitamina" },
+            { name: "Vitamina K2", unit: "mcg", type: "Vitamina" },
             { name: "Biotina", unit: "mcg", type: "Vitamina" }, { name: "Colina", unit: "mg", type: "Vitamina" },
 
             { name: "Calcio", unit: "mg", type: "Mineral" }, { name: "Cloro", unit: "mg", type: "Mineral" },
@@ -1232,7 +1190,7 @@
         const dailyRecommendedValues = {
             "calories": 2000, "fat": 70, "saturatedFat": 20, "carbs": 275, "sugars": 50, "protein": 50, "fiber": 30, "salt": 6,
             "Vitamina A": { value: 800, unit: "mcg" }, "Vitamina C": { value: 80, unit: "mg" }, "Vitamina D": { value: 5, unit: "mcg" },
-            "Vitamina E": { value: 12, unit: "mg" }, "Vitamina K1": { value: 75, unit: "mcg" }, "Vitamina K2": { value: 45, unit: "mcg" }, // Añadido VDR para K1 y K2
+            "Vitamina E": { value: 12, unit: "mg" }, "Vitamina K1": { value: 75, unit: "mcg" }, "Vitamina K2": { value: 45, unit: "mcg" },
             "Vitamina B1": { value: 1.1, unit: "mg" }, "Vitamina B2": { value: 1.4, unit: "mg" }, "Vitamina B3": { value: 16, unit: "mg" },
             "Vitamina B5": { value: 6, unit: "mg" }, "Vitamina B6": { value: 1.4, unit: "mg" }, "Vitamina B9 (Folato)": { value: 200, unit: "mcg" }, "Vitamina B12": { value: 2.5, unit: "mcg" },
             "Biotina": { value: 50, unit: "mcg" }, "Colina": { value: 550, unit: "mg" },
@@ -1286,6 +1244,8 @@
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         const detailQuantitySelector = document.getElementById('detailQuantitySelector');
         const detailCustomQuantityInput = document.getElementById('detailCustomQuantity');
+        const filterSpecialCharacteristicsDiv = document.getElementById('filterSpecialCharacteristics');
+
 
         let currentEditingFoodIndex = -1; // Almacena el índice del alimento que se está editando o añadiendo.
         let displayedFoodCount = 100; // L_E_O: Cantidad de alimentos a mostrar inicialmente.
@@ -2055,7 +2015,7 @@
             food.salt = parseFloat(document.getElementById('editSalt').value);
             food.calories = parseFloat(calculateCalories()); // Recalcula las calorías finales.
 
-            // Recopila los micronutrientes dinámicamente añadidos.
+            // Recopila los micronutrientes dinámicos.
             food.micronutrients = {}; // Reinicia el objeto de micronutrientes.
             const micronutrientRows = editMicronutrientTableBody.querySelectorAll('.micronutrient-input-row');
             micronutrientRows.forEach(row => {
@@ -2463,10 +2423,56 @@
         }
 
         /**
+         * Función para cargar datos desde un archivo JSON local (en la misma carpeta).
+         * Asume que el archivo se llama `alimentos.json`.
+         */
+        async function loadFoodDataFromFile() {
+            try {
+                // L_E_O: Intenta obtener el archivo JSON.
+                const response = await fetch('alimentos.json'); 
+                if (!response.ok) {
+                    // Si el archivo no se encuentra o hay un error HTTP, lanza un error.
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json(); // Parsea la respuesta como JSON.
+                // Valida el formato de los datos cargados.
+                if (Array.isArray(data) && data.every(item =>
+                    item.name && typeof item.protein === 'number' && typeof item.carbs === 'number' &&
+                    typeof item.fat === 'number' && item.hasOwnProperty('unitBase') &&
+                    item.hasOwnProperty('price') && Array.isArray(item.characteristics) && item.category &&
+                    typeof item.micronutrients === 'object'
+                )) {
+                    foodData = data; // Asigna los datos cargados a `foodData`.
+                    // Recalcula las calorías para asegurar que estén correctas después de la carga.
+                    foodData.forEach(food => {
+                        const protein = food.protein || 0;
+                        const carbs = food.carbs || 0;
+                        const fat = food.fat || 0;
+                        food.calories = parseFloat(((protein * 4) + (carbs * 4) + (fat * 9)).toFixed(1));
+                    });
+                    showToast('¡Datos cargados desde alimentos.json con éxito!');
+                } else {
+                    console.error('Error: El archivo alimentos.json no tiene el formato esperado.');
+                    showToast('Error: Formato de datos incorrecto en alimentos.json.');
+                }
+            } catch (error) {
+                console.error('Error al cargar alimentos.json:', error);
+                showToast('Error al cargar alimentos.json. Asegúrate de que el archivo existe y es válido.');
+            } finally {
+                // Siempre inicializa la UI después de intentar cargar los datos.
+                populateFilterCategories(); // Rellena las categorías.
+                populateFilterSpecialCharacteristics(); // Rellena las características especiales.
+                toggleMicronutrientSortSelect(); // Inicializa el selector de micronutrientes para la ordenación.
+                filterAndSortFoods(); // Realiza el renderizado inicial y aplica cualquier filtro/ordenación por defecto.
+            }
+        }
+
+        /**
          * Rellena los selectores de categorías de alimentos en los filtros y en el modal de edición.
          */
         function populateFilterCategories() {
             // Rellena el selector de categorías en los filtros.
+            filterCategorySelect.innerHTML = '<option value="">Todas</option>';
             foodCategories.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat;
@@ -2475,6 +2481,7 @@
             });
             // También rellena el selector de categorías en el modal de edición/añadir.
             const editCategorySelect = document.getElementById('editCategory');
+            editCategorySelect.innerHTML = '<option value="">Selecciona una categoría</option>';
             foodCategories.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat;
@@ -2487,6 +2494,7 @@
          * Rellena los checkboxes de características especiales en la sección de filtros avanzados.
          */
         function populateFilterSpecialCharacteristics() {
+            filterSpecialCharacteristicsDiv.innerHTML = ''; // Limpia los checkboxes existentes
             specialCharacteristics.forEach(char => {
                 const id = `filterChar_${char.replace(/\s+/g, '')}`; // Crea un ID único para cada checkbox.
                 filterSpecialCharacteristicsDiv.innerHTML += `
@@ -2500,10 +2508,7 @@
 
         // L_E_O: Configuración inicial al cargar el DOM.
         document.addEventListener('DOMContentLoaded', () => {
-            populateFilterCategories(); // Rellena las categorías.
-            populateFilterSpecialCharacteristics(); // Rellena las características especiales.
-            toggleMicronutrientSortSelect(); // Inicializa el selector de micronutrientes para la ordenación.
-            filterAndSortFoods(); // Realiza el renderizado inicial y aplica cualquier filtro/ordenación por defecto.
+            loadFoodDataFromFile(); // L_E_O: Llama a la nueva función para cargar datos desde el archivo JSON.
         });
     </script>
 </body>
